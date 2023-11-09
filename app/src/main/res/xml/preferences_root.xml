@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory app:title="Autonomous Abilities">
+
+        <SwitchPreferenceCompat
+            app:key="autonomous_blinking"
+            app:summary="Blinks eye LEDs periodically. Color changes to pink when the robot sees a new user."
+            app:title="Autonomous Blinking" />
+        <SwitchPreferenceCompat
+            app:key="background_movement"
+            app:summary="Triggers slight movements of the upper body that the robot does autonomously."
+            app:title="Background Movement" />
+        <SwitchPreferenceCompat
+            app:key="basic_awareness"
+            app:summary="Follows the engaged person with his head and body. Reacts to hands, bumpers &amp; human detection"
+            app:title="Basic Awareness" />
+
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Audio">
+
+        <SeekBarPreference
+            app:key="volume"
+            app:showSeekBarValue="true"
+
+            app:title="Volume"/>
+
+        <SwitchPreferenceCompat
+            app:key="microphone"
+            app:summaryOff="Ανενεργό"
+            app:summaryOn="Ενεργό"
+            app:title="Robot Listening" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cardview_dark_background"
+    android:fitsSystemWindows="true">
+    <!--android:layout_marginBottom="?android:attr/actionBarSize"-->
+
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="150dp"
+        android:layout_height="93dp"
+        android:layout_margin="20dp"
+        android:contentDescription="Gaiorama Logo"
+        android:src="@drawable/georama_logo_sm_white"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraint_top"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/constraint_bottom"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constraint_right"
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            app:layout_constraintRight_toRightOf="parent">
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_settings"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/icons8_settings_100___"
+                app:backgroundTint="@color/logo_yellow"
+                app:fabCustomSize="60dp"
+                app:layout_constraintBottom_toTopOf="@id/fab_encyclopedia"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_encyclopedia"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/icons8_open_book_100"
+                app:backgroundTint="@color/logo_yellow"
+                app:fabCustomSize="60dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/fab_settings" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@id/constraint_right"
+            app:layout_constraintTop_toTopOf="parent">
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraint_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/constraint_top"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/CardViewHumanInput"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginVertical="10dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:cardCornerRadius="30dp">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/editTextLayout"
+                app:endIconMode="clear_text"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="Πληκτρολογήστε για γραπτή επικοινωνία με το Pepper..."
+                app:hintTextColor="@color/logo_yellow"
+                android:gravity="center_vertical"
+                android:focusableInTouchMode="true"
+                app:shapeAppearance="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox"
+                android:focusable="true">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editTextHumanInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:endIconMode="clear_text"
+                    android:imeOptions="actionSend"
+                    />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+
+<!--
+            <ImageButton
+                android:id="@+id/send_msg_btn"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginHorizontal="10dp"
+                android:backgroundTint="@color/logo_yellow"
+                android:contentDescription="Send message to Pepper"
+                android:scaleType="fitCenter"
+                android:src="@drawable/icons8_sent_100"
+                app:tint="@color/white" />-->
+
+        </com.google.android.material.card.MaterialCardView>
+
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
