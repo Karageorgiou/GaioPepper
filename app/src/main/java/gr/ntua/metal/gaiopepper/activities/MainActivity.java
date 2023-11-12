@@ -11,6 +11,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.ImageButton;
 
 import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
@@ -50,6 +52,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private TextInputLayout textInputLayout;
     private TextInputEditText textInputEditText;
     private RecyclerView recyclerView;
+    private ImageButton buttonSend;
 
 
 
@@ -78,7 +81,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         messageItemList = new ArrayList<MessageItem>();
 
-        messageItemList.add(new MessageItem(R.drawable.ic_launcher_foreground, "hello world"));
+        messageItemList.add(new MessageItem(R.drawable.icons8_user_100, "hello world"));
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(new MessageAdapter(getApplicationContext(), messageItemList));
@@ -103,7 +106,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         QiChatbot chatbot =  buildQiChatbot();
         Chat chat = buildChat(chatbot);
 
-        /*
         Future<Void> chatFuture = chat.async().run();
         chatFuture.thenConsume(future -> {
             if (future.hasError()){
@@ -111,7 +113,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             }
         });
 
-        */
 
 
 
@@ -146,6 +147,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             Log.i(TAG, "TOUCH inside");
             textInputLayout.clearFocus();
             hideSoftKeyboard(textInputLayout);
+        } else if (viewID == R.id.btn_send) {
+            String message = textInputEditText.getText().toString();
+            if (!message.isEmpty()) {
+                Log.d(TAG,"Message: " + message);
+                textInputEditText.getText().clear();
+            }
         }
     }
 
@@ -175,12 +182,18 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         } catch (Exception e) {
             e.printStackTrace();
         }
+        try {
+            buttonSend = findViewById(R.id.btn_send);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void addListeners() {
         fabSettings.setOnClickListener(this);
         fabEncyclopedia.setOnClickListener(this);
         textInputEditText.setOnClickListener(this);
+        buttonSend.setOnClickListener(this);
     }
 
     private void removeListeners() {
