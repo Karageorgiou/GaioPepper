@@ -1,10 +1,12 @@
-package gr.ntua.metal.gaiopepper;
+package gr.ntua.metal.gaiopepper.activities;
 
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+
+import gr.ntua.metal.gaiopepper.R;
 
 public class EncyclopediaActivity extends AppCompatActivity {
 

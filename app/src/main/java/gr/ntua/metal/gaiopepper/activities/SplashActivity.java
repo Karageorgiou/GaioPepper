@@ -1,8 +1,7 @@
-package gr.ntua.metal.gaiopepper;
+package gr.ntua.metal.gaiopepper.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -10,6 +9,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Timer;
 import java.util.TimerTask;
+
+import gr.ntua.metal.gaiopepper.R;
 
 public class SplashActivity extends AppCompatActivity {
     private static final String TAG = "Splash Activity" ;

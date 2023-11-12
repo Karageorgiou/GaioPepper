@@ -1,13 +1,13 @@
-package gr.ntua.metal.gaiopepper;
+package gr.ntua.metal.gaiopepper.activities;
 
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
 import android.content.Intent;
 
-import android.os.Build;
 import android.os.Bundle;
-import android.os.LocaleList;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -25,15 +25,17 @@ import com.aldebaran.qi.sdk.design.activity.conversationstatus.SpeechBarDisplayS
 import com.aldebaran.qi.sdk.object.conversation.Chat;
 import com.aldebaran.qi.sdk.object.conversation.QiChatbot;
 import com.aldebaran.qi.sdk.object.conversation.Topic;
-import com.aldebaran.qi.sdk.object.locale.Language;
-import com.aldebaran.qi.sdk.object.locale.Region;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
+
+import gr.ntua.metal.gaiopepper.R;
+import gr.ntua.metal.gaiopepper.adapters.MessageAdapter;
+import gr.ntua.metal.gaiopepper.models.MessageItem;
 
 public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks, View.OnClickListener {
     private static final String TAG = "Main Activity";
@@ -47,6 +49,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private FloatingActionButton fabEncyclopedia;
     private TextInputLayout textInputLayout;
     private TextInputEditText textInputEditText;
+    private RecyclerView recyclerView;
+
+
+
+
+    List<MessageItem> messageItemList;
 
     //private final Locale locale_greek = new Locale(Language.GREEK, Region.GREECE);
 
@@ -68,6 +76,15 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         findViews();
 
+        messageItemList = new ArrayList<MessageItem>();
+
+        messageItemList.add(new MessageItem(R.drawable.ic_launcher_foreground, "hello world"));
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(new MessageAdapter(getApplicationContext(), messageItemList));
+
+
+
     }
 
     @Override
@@ -86,6 +103,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         QiChatbot chatbot =  buildQiChatbot();
         Chat chat = buildChat(chatbot);
 
+        /*
         Future<Void> chatFuture = chat.async().run();
         chatFuture.thenConsume(future -> {
             if (future.hasError()){
@@ -93,7 +111,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             }
         });
 
-
+        */
 
 
 
@@ -149,6 +167,11 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         }
         try {
             textInputEditText = (TextInputEditText) textInputLayout.getEditText();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            recyclerView = findViewById(R.id.recycler_view);
         } catch (Exception e) {
             e.printStackTrace();
         }

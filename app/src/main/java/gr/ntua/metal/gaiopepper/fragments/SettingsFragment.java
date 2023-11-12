@@ -1,4 +1,4 @@
-package gr.ntua.metal.gaiopepper;
+package gr.ntua.metal.gaiopepper.fragments;
 
 
 import android.os.Bundle;
@@ -7,7 +7,8 @@ import android.util.Log;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
-import com.aldebaran.qi.sdk.object.holder.Holder;
+import gr.ntua.metal.gaiopepper.R;
+import gr.ntua.metal.gaiopepper.activities.SettingsActivity;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
     private static final String TAG = "Settings Activity" ;

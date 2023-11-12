@@ -1,4 +1,4 @@
-package gr.ntua.metal.gaiopepper;
+package gr.ntua.metal.gaiopepper.activities;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -17,7 +17,8 @@ import com.aldebaran.qi.sdk.builder.HolderBuilder;
 import com.aldebaran.qi.sdk.object.holder.AutonomousAbilitiesType;
 import com.aldebaran.qi.sdk.object.holder.Holder;
 
-import java.util.Objects;
+import gr.ntua.metal.gaiopepper.R;
+import gr.ntua.metal.gaiopepper.fragments.SettingsFragment;
 
 public class SettingsActivity extends AppCompatActivity implements RobotLifecycleCallbacks {
     private static final String TAG = "Settings Activity" ;
