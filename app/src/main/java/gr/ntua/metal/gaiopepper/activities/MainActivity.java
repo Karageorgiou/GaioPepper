@@ -6,15 +6,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
 import android.content.Intent;
-
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.ImageButton;
 
+import com.aldebaran.qi.Consumer;
+import com.aldebaran.qi.Function;
 import com.aldebaran.qi.Future;
+import com.aldebaran.qi.Promise;
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.QiSDK;
 import com.aldebaran.qi.sdk.RobotLifecycleCallbacks;
@@ -24,9 +25,22 @@ import com.aldebaran.qi.sdk.builder.TopicBuilder;
 import com.aldebaran.qi.sdk.design.activity.RobotActivity;
 import com.aldebaran.qi.sdk.design.activity.conversationstatus.SpeechBarDisplayPosition;
 import com.aldebaran.qi.sdk.design.activity.conversationstatus.SpeechBarDisplayStrategy;
+import com.aldebaran.qi.sdk.object.conversation.BaseChatbotReaction;
+import com.aldebaran.qi.sdk.object.conversation.BaseQiChatExecutor;
 import com.aldebaran.qi.sdk.object.conversation.Chat;
+import com.aldebaran.qi.sdk.object.conversation.Chatbot;
+import com.aldebaran.qi.sdk.object.conversation.ChatbotReactionHandlingStatus;
+import com.aldebaran.qi.sdk.object.conversation.Phrase;
 import com.aldebaran.qi.sdk.object.conversation.QiChatbot;
+import com.aldebaran.qi.sdk.object.conversation.ReplyPriority;
+import com.aldebaran.qi.sdk.object.conversation.ReplyReaction;
+import com.aldebaran.qi.sdk.object.conversation.RunnableReplyReaction;
+import com.aldebaran.qi.sdk.object.conversation.SpeechEngine;
+import com.aldebaran.qi.sdk.object.conversation.StandardReplyReaction;
 import com.aldebaran.qi.sdk.object.conversation.Topic;
+import com.aldebaran.qi.sdk.object.locale.Language;
+import com.aldebaran.qi.sdk.object.locale.Locale;
+import com.aldebaran.qi.sdk.object.locale.Region;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -39,6 +53,9 @@ import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.adapters.MessageAdapter;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
 
+import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutUser;
+import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutRobot;
+
 public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks, View.OnClickListener {
     private static final String TAG = "Main Activity";
 
@@ -46,6 +63,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
 
     private QiContext qiContext;
+    private final Locale localeGR = new Locale(Language.GREEK, Region.GREECE);
+    private final Locale localeEN = new Locale(Language.ENGLISH, Region.UNITED_STATES);
 
     private FloatingActionButton fabSettings;
     private FloatingActionButton fabEncyclopedia;
@@ -54,10 +73,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private RecyclerView recyclerView;
     private ImageButton buttonSend;
 
+    private QiChatbot chatbot;
+    private Chat chat;
+    private Future<Void> chatFuture;
 
-
-
-    List<MessageItem> messageItemList;
+    private List<MessageItem> messageItemList;
+    private MessageAdapter messageAdapter;
 
     //private final Locale locale_greek = new Locale(Language.GREEK, Region.GREECE);
 
@@ -80,12 +101,10 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         findViews();
 
         messageItemList = new ArrayList<MessageItem>();
-
-        messageItemList.add(new MessageItem(R.drawable.icons8_user_100, "hello world"));
+        messageAdapter = new MessageAdapter(getApplicationContext(), messageItemList);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(new MessageAdapter(getApplicationContext(), messageItemList));
-
+        recyclerView.setAdapter(messageAdapter);
 
 
     }
@@ -103,18 +122,17 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         this.qiContext = qiContext;
         addListeners();
 
-        QiChatbot chatbot =  buildQiChatbot();
+        QiChatbot chatbot = buildQiChatbot();
         Chat chat = buildChat(chatbot);
 
-        Future<Void> chatFuture = chat.async().run();
+        chatFuture = chat.async().run();
         chatFuture.thenConsume(future -> {
-            if (future.hasError()){
+            if (future.hasError()) {
                 Log.e(TAG, "Chat finished with error: " + future.getErrorMessage());
+            } else {
+                Log.e(TAG, "Chat finished: " + future.get().toString());
             }
         });
-
-
-
 
 
 
@@ -144,17 +162,78 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             Intent encyclopediaIntent = new Intent(MainActivity.this, EncyclopediaActivity.class);
             startActivity(encyclopediaIntent);
         } else if (viewID == R.id.editTextHumanInput) {
-            Log.i(TAG, "TOUCH inside");
             textInputLayout.clearFocus();
             hideSoftKeyboard(textInputLayout);
         } else if (viewID == R.id.btn_send) {
             String message = textInputEditText.getText().toString();
             if (!message.isEmpty()) {
-                Log.d(TAG,"Message: " + message);
+                Phrase userPhrase = new Phrase(message);
+                Log.d(TAG, "User message: " + userPhrase.getText());
+
+
+                Future<ReplyReaction> replyToFuture = chatbot.async().replyTo(userPhrase, localeEN);
+                /*replyToFuture.thenApply(value -> {
+                    if (value.hasError()) {
+                        Log.e(TAG, "ReplyReaction: ERROR: " + value.getErrorMessage());
+                    } else {
+                        Log.d(TAG, "ReplyReaction: " + value.get().getChatbotReaction());
+                    }
+                    return null;
+                });*/
+
+                replyToFuture.thenCompose(value -> {
+
+                    if (value.hasError()) {
+                        Log.d(TAG, "ERROR: " + value.getErrorMessage());
+
+                    } else {
+                        Log.d(TAG, "PRIOR: " + value.get().getReplyPriority());
+                        Log.d(TAG, "SAYING: " + value.get().getChatbotReaction().getChatbotReactionHandlingStatus());
+                        Log.d(TAG, "QIVALUE: " + value.get().getReplyPriority().getQiValue());
+
+                        value.get().getChatbotReaction().addOnChatbotReactionHandlingStatusChangedListener(new RunnableReplyReaction(qiContext, ReplyPriority.NORMAL) {
+                            @Override
+                            public void runWith(SpeechEngine speechEngine) {
+                                Log.d(TAG, "runwith: " + speechEngine.getSaying());
+
+                            }
+
+                            @Override
+                            public void stop() {
+                                Log.d(TAG, "stop: ");
+                            }
+                        });
+
+                    }
+
+
+                    return null;
+                });
+
+
+
+
+
+               /* Future<Void> acknowledgeHeardFuture = chatbot.async().acknowledgeHeard(userPhrase,localeEN);
+
+                acknowledgeHeardFuture.thenCompose((Function<Future<Void>, Future<Phrase>>) value -> {
+                    Log.i(TAG, "acknowledgeHeardFuture " + value.getValue());
+
+
+
+                    return null;
+
+                });*/
+
+
+                messageItemList.add(new MessageItem(LayoutUser, R.drawable.icons8_user_100, message));
+                messageAdapter.notifyItemInserted(messageItemList.size());
+
                 textInputEditText.getText().clear();
             }
         }
     }
+
 
     private void findViews() {
         try {
@@ -209,59 +288,88 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 .with(qiContext)
                 .withResource(R.raw.topic_minerals)
                 .build();
+        Topic test = TopicBuilder
+                .with(qiContext)
+                .withResource(R.raw.test_topic)
+                .build();
 
 
         List<Topic> topicList = new LinkedList<Topic>();
-        topicList.add(lexicon);
-        topicList.add(topic_minerals);
+        topicList.add(test);
+        //topicList.add(lexicon);
+        //topicList.add(topic_minerals);
 
-        QiChatbot chatbot = QiChatbotBuilder
+        chatbot = QiChatbotBuilder
                 .with(qiContext)
                 .withTopics(topicList)
-                //.withLocale(locale_greek)
+                .withLocale(localeEN)
                 .build();
 
         chatbot.addOnBookmarkReachedListener(bookmark -> {
             Log.i(TAG, "Bookmark " + bookmark.getName() + " reached.");
 
         });
+
         chatbot.addOnEndedListener(endReason -> {
             Log.i(TAG, "Chatbot ended for reason: " + endReason);
-
+            chatFuture.requestCancellation();
         });
 
         return chatbot;
     }
 
     private Chat buildChat(QiChatbot chatbot) {
-        Chat chat = ChatBuilder
+        chat = ChatBuilder
                 .with(qiContext)
                 //.withLocale(locale_greek)
                 .withChatbot(chatbot)
                 .build();
 
         chat.addOnStartedListener(() -> {
-            Log.i(TAG, "Chat started.");
+            Log.i(TAG, "[CHAT] Chat started.");
 
         });
         chat.addOnListeningChangedListener(listening -> {
-            Log.i(TAG, "Listening changed.");
+            if (listening) {
+                Log.i(TAG, "[CHAT] Listening START.");
+            } else {
+                Log.i(TAG, "[CHAT] Listening END.");
+            }
 
         });
         chat.addOnHeardListener(heardPhrase -> {
-            Log.i(TAG, "Heard something.");
+            Log.i(TAG, "[CHAT] Heard phrase: " + heardPhrase.getText());
 
+        });
+        chat.addOnNormalReplyFoundForListener(input -> {
+            Log.i(TAG, "[CHAT] Reply found for user message: " + input.getText());
+        });
+        chat.addOnNoPhraseRecognizedListener(() -> {
+            Log.i(TAG, "[CHAT] No phrase recognized.");
+        });
+        chat.addOnSayingChangedListener(sayingPhrase -> {
+            if (!sayingPhrase.getText().isEmpty()) {
+                Log.i(TAG, "[CHAT] Pepper Reply: " + sayingPhrase.getText());
+                messageItemList.add(new MessageItem(LayoutRobot, R.drawable.icons8_user_100, sayingPhrase.getText()));
+                messageAdapter.notifyItemInserted(messageItemList.size());
+            }
+        });
+        chat.addOnFallbackReplyFoundForListener(input -> {
+            Log.i(TAG, "[CHAT] Fallback Reply found for user message: " + input.getText());
+        });
+        chat.addOnNoReplyFoundForListener(input -> {
+            Log.i(TAG, "[CHAT] NO Reply found for user message: " + input.getText());
         });
         return chat;
     }
 
-    public void showSoftKeyboard(View view){
-        if(view.requestFocus()){
-            imm.showSoftInput(view,InputMethodManager.SHOW_IMPLICIT);
+    public void showSoftKeyboard(View view) {
+        if (view.requestFocus()) {
+            imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
         }
     }
 
-    public void hideSoftKeyboard(View view){
+    public void hideSoftKeyboard(View view) {
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 

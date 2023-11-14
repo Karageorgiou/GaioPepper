@@ -7,25 +7,35 @@
     android:fitsSystemWindows="true">
     <!--android:layout_marginBottom="?android:attr/actionBarSize"-->
 
-    <ImageView
-        android:id="@+id/logo"
-        android:layout_width="150dp"
-        android:layout_height="93dp"
-        android:layout_margin="20dp"
-        android:contentDescription="Gaiorama Logo"
-        android:src="@drawable/georama_logo_sm_white"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraint_top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/constraint_middle"
+
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="150dp"
+            android:layout_height="93dp"
+            android:layout_margin="20dp"
+            android:contentDescription="Gaiorama Logo"
+            android:src="@drawable/georama_logo_sm_white"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraint_top"
+        android:id="@+id/constraint_middle"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@id/constraint_bottom"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/constraint_top">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constraint_right"
@@ -88,7 +98,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/constraint_top">
+        app:layout_constraintTop_toBottomOf="@id/constraint_middle">
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/CardViewHumanInput"
@@ -125,7 +135,6 @@
         </com.google.android.material.card.MaterialCardView>
 
 
-
         <ImageButton
             android:id="@+id/btn_send"
             android:layout_width="50dp"
@@ -135,11 +144,11 @@
             android:contentDescription="Send message to Pepper"
             android:scaleType="fitCenter"
             android:src="@drawable/icons8_sent_100"
-            app:tint="@color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toRightOf="@id/CardViewHumanInput"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:tint="@color/white" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

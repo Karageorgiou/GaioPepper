@@ -6,10 +6,11 @@
 
     <ImageView
         android:id="@+id/image_user_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:layout_marginHorizontal="10dp"
-        android:src="@drawable/icons8_user_100"        />
+        android:src="@drawable/icons8_user_100"
+        />
 
     <!--app:tint="@color/white"-->
 
