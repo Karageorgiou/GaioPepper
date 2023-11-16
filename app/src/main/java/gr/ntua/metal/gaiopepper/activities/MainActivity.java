@@ -12,10 +12,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
 
-import com.aldebaran.qi.Consumer;
-import com.aldebaran.qi.Function;
 import com.aldebaran.qi.Future;
-import com.aldebaran.qi.Promise;
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.QiSDK;
 import com.aldebaran.qi.sdk.RobotLifecycleCallbacks;
@@ -25,18 +22,9 @@ import com.aldebaran.qi.sdk.builder.TopicBuilder;
 import com.aldebaran.qi.sdk.design.activity.RobotActivity;
 import com.aldebaran.qi.sdk.design.activity.conversationstatus.SpeechBarDisplayPosition;
 import com.aldebaran.qi.sdk.design.activity.conversationstatus.SpeechBarDisplayStrategy;
-import com.aldebaran.qi.sdk.object.conversation.BaseChatbotReaction;
-import com.aldebaran.qi.sdk.object.conversation.BaseQiChatExecutor;
 import com.aldebaran.qi.sdk.object.conversation.Chat;
-import com.aldebaran.qi.sdk.object.conversation.Chatbot;
-import com.aldebaran.qi.sdk.object.conversation.ChatbotReactionHandlingStatus;
 import com.aldebaran.qi.sdk.object.conversation.Phrase;
 import com.aldebaran.qi.sdk.object.conversation.QiChatbot;
-import com.aldebaran.qi.sdk.object.conversation.ReplyPriority;
-import com.aldebaran.qi.sdk.object.conversation.ReplyReaction;
-import com.aldebaran.qi.sdk.object.conversation.RunnableReplyReaction;
-import com.aldebaran.qi.sdk.object.conversation.SpeechEngine;
-import com.aldebaran.qi.sdk.object.conversation.StandardReplyReaction;
 import com.aldebaran.qi.sdk.object.conversation.Topic;
 import com.aldebaran.qi.sdk.object.locale.Language;
 import com.aldebaran.qi.sdk.object.locale.Locale;
@@ -80,7 +68,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private List<MessageItem> messageItemList;
     private MessageAdapter messageAdapter;
 
-    //private final Locale locale_greek = new Locale(Language.GREEK, Region.GREECE);
 
 
     @Override
@@ -103,7 +90,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         messageItemList = new ArrayList<MessageItem>();
         messageAdapter = new MessageAdapter(getApplicationContext(), messageItemList);
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setStackFromEnd(true);
+        recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(messageAdapter);
 
 
@@ -123,8 +112,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         addListeners();
 
         QiChatbot chatbot = buildQiChatbot();
-        Chat chat = buildChat(chatbot);
-
+        chat = buildChat(chatbot);
         chatFuture = chat.async().run();
         chatFuture.thenConsume(future -> {
             if (future.hasError()) {
@@ -133,9 +121,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 Log.e(TAG, "Chat finished: " + future.get().toString());
             }
         });
-
-
-
     }
 
     @Override
@@ -148,7 +133,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     @Override
     public void onRobotFocusRefused(String reason) {
         Log.i(TAG, "onRobotFocusRefused: " + reason);
-
         // The robot focus is refused.
     }
 
@@ -171,63 +155,75 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 Log.d(TAG, "User message: " + userPhrase.getText());
 
 
-                Future<ReplyReaction> replyToFuture = chatbot.async().replyTo(userPhrase, localeEN);
-                /*replyToFuture.thenApply(value -> {
-                    if (value.hasError()) {
-                        Log.e(TAG, "ReplyReaction: ERROR: " + value.getErrorMessage());
-                    } else {
-                        Log.d(TAG, "ReplyReaction: " + value.get().getChatbotReaction());
-                    }
-                    return null;
-                });*/
-
+                /*Future<ReplyReaction> replyToFuture = chatbot.async().replyTo(userPhrase, localeEN);
                 replyToFuture.thenCompose(value -> {
 
                     if (value.hasError()) {
-                        Log.d(TAG, "ERROR: " + value.getErrorMessage());
+                        Log.d(TAG, "replyToFuture ERROR: " + value.getErrorMessage());
 
                     } else {
-                        Log.d(TAG, "PRIOR: " + value.get().getReplyPriority());
-                        Log.d(TAG, "SAYING: " + value.get().getChatbotReaction().getChatbotReactionHandlingStatus());
-                        Log.d(TAG, "QIVALUE: " + value.get().getReplyPriority().getQiValue());
-
-                        value.get().getChatbotReaction().addOnChatbotReactionHandlingStatusChangedListener(new RunnableReplyReaction(qiContext, ReplyPriority.NORMAL) {
+                        ReplyReaction replyReaction = value.get();
+                        replyReaction.getChatbotReaction().runWith(new SpeechEngine() {
                             @Override
-                            public void runWith(SpeechEngine speechEngine) {
-                                Log.d(TAG, "runwith: " + speechEngine.getSaying());
+                            public Async async() {
+                                return null;
+                            }
+
+                            @Override
+                            public Say makeSay(Phrase phrase) {
+                                Log.d(TAG, "makeSay: " + phrase);
+                                return null;
+                            }
+
+                            @Override
+                            public Say makeSay(Phrase phrase, BodyLanguageOption bodyLanguageOption) {
+                                Log.d(TAG, "makeSay: " + phrase);
+
+                                return null;
+                            }
+
+                            @Override
+                            public Say makeSay(Phrase phrase, BodyLanguageOption bodyLanguageOption, Locale locale) {
+                                Log.d(TAG, "makeSay: " + phrase);
+
+                                return null;
+                            }
+
+                            @Override
+                            public Phrase getSaying() {
+                                return null;
+                            }
+
+                            @Override
+                            public void setOnSayingChangedListener(OnSayingChangedListener onSayingChangedListener) {
 
                             }
 
                             @Override
-                            public void stop() {
-                                Log.d(TAG, "stop: ");
+                            public void addOnSayingChangedListener(OnSayingChangedListener onSayingChangedListener) {
+
+                            }
+
+                            @Override
+                            public void removeOnSayingChangedListener(OnSayingChangedListener onSayingChangedListener) {
+
+                            }
+
+                            @Override
+                            public void removeAllOnSayingChangedListeners() {
+
                             }
                         });
-
+                        Log.d(TAG, "replyToFuture PRIOR: " + replyReaction.getReplyPriority());
+                        Log.d(TAG, "replyToFuture SAYING: " + replyReaction.getChatbotReaction().getChatbotReactionHandlingStatus());
+                        Log.d(TAG, "replyToFuture QIVALUE: " + replyReaction.getReplyPriority().getQiValue());
                     }
-
-
                     return null;
-                });
-
-
-
-
-
-               /* Future<Void> acknowledgeHeardFuture = chatbot.async().acknowledgeHeard(userPhrase,localeEN);
-
-                acknowledgeHeardFuture.thenCompose((Function<Future<Void>, Future<Phrase>>) value -> {
-                    Log.i(TAG, "acknowledgeHeardFuture " + value.getValue());
-
-
-
-                    return null;
-
                 });*/
 
 
                 messageItemList.add(new MessageItem(LayoutUser, R.drawable.icons8_user_100, message));
-                messageAdapter.notifyItemInserted(messageItemList.size());
+                messageAdapter.notifyItemInserted(messageAdapter.getItemCount() -1);
 
                 textInputEditText.getText().clear();
             }
@@ -299,6 +295,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         //topicList.add(lexicon);
         //topicList.add(topic_minerals);
 
+
         chatbot = QiChatbotBuilder
                 .with(qiContext)
                 .withTopics(topicList)
@@ -319,11 +316,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     private Chat buildChat(QiChatbot chatbot) {
-        chat = ChatBuilder
+        Chat chat = ChatBuilder
                 .with(qiContext)
                 //.withLocale(locale_greek)
                 .withChatbot(chatbot)
                 .build();
+
 
         chat.addOnStartedListener(() -> {
             Log.i(TAG, "[CHAT] Chat started.");
@@ -338,8 +336,37 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         });
         chat.addOnHeardListener(heardPhrase -> {
-            Log.i(TAG, "[CHAT] Heard phrase: " + heardPhrase.getText());
+            String heardText = heardPhrase.getText();
+            if (!heardText.isEmpty()) {
+                Log.i(TAG, "[CHAT] Heard phrase: " + heardPhrase.getText());
+                messageItemList.add(new MessageItem(LayoutUser, R.drawable.icons8_user_100, heardText));
+                //messageAdapter.notifyDataSetChanged();
 
+                /*synchronized (messageAdapter) {
+                    messageItemList.add(new MessageItem(LayoutUser, R.drawable.icons8_user_100, heardText));
+                    messageAdapter.notify();
+                }*/
+                /*runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        messageItemList.add(new MessageItem(LayoutUser, R.drawable.icons8_user_100, heardText));
+                        messageAdapter.notify();
+                    }
+                });*/
+            }
+        });
+        chat.addOnSayingChangedListener(sayingPhrase -> {
+            String sayingText = sayingPhrase.getText();
+            if (!sayingText.isEmpty()) {
+                Log.i(TAG, "[CHAT] Pepper Reply: " + sayingText);
+                messageItemList.add(new MessageItem(LayoutRobot, R.drawable.icons8_user_100, sayingText));
+                runOnUiThread(() -> {
+                    //messageAdapter.notifyDataSetChanged();
+                    messageAdapter.notifyItemInserted(messageAdapter.getItemCount() -1);
+                    recyclerView.scrollToPosition(messageItemList.size()-1);
+                });
+
+            }
         });
         chat.addOnNormalReplyFoundForListener(input -> {
             Log.i(TAG, "[CHAT] Reply found for user message: " + input.getText());
@@ -347,21 +374,17 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         chat.addOnNoPhraseRecognizedListener(() -> {
             Log.i(TAG, "[CHAT] No phrase recognized.");
         });
-        chat.addOnSayingChangedListener(sayingPhrase -> {
-            if (!sayingPhrase.getText().isEmpty()) {
-                Log.i(TAG, "[CHAT] Pepper Reply: " + sayingPhrase.getText());
-                messageItemList.add(new MessageItem(LayoutRobot, R.drawable.icons8_user_100, sayingPhrase.getText()));
-                messageAdapter.notifyItemInserted(messageItemList.size());
-            }
-        });
+
         chat.addOnFallbackReplyFoundForListener(input -> {
             Log.i(TAG, "[CHAT] Fallback Reply found for user message: " + input.getText());
         });
         chat.addOnNoReplyFoundForListener(input -> {
             Log.i(TAG, "[CHAT] NO Reply found for user message: " + input.getText());
         });
+
         return chat;
     }
+
 
     public void showSoftKeyboard(View view) {
         if (view.requestFocus()) {
