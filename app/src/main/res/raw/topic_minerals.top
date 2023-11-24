@@ -20,27 +20,6 @@ u:(["ποιος ειναι ο φιλος σου" "ποιοι ειναι οι φ�
 
 u:(["πως σε λενε" "ποιο ειναι το ονομα σου"]) ^rand["Με λένε Πέππερ." "Το ονομά μου είναι Πέππερ."]
 
-u:(~greetings_human) ~greetings_pepper . $gypsum_flag=οχι ^goto(INTRO)
-
-u:(~how_are_you) ^rand["μια χαρα," "καλα," "τελεια," "πολυ ωραια," "δε θα μπορουσα καλυτερα,"] Εσυ? ^stayInScope
-    u1:([~good καλα]) Χαίρομαι που είσαι καλα. ^enableThenGoto(LEARN_1)
-    u1:([χαλια "δεν ειμαι καλα" βαριεμαι]) Μην ανυσηχείς θα σου φτιάξω εγώ τη διάθεση. ^enableThenGoto(LEARN_0)
-
-
-proposal: %INTRO ~neutral_slow Γιά σας, Είμαι ο Πέπερ.  Καλωσήρθατε στο  Γαιοόραμα.
-                               Είμαι ο ρομποτικός σας φίλος, και θα σας βοηθήσω, να ανακαλύψετε ,τον κόσμο της ορυκτολογίας. ^goto(LEARN_0)
-
-
-proposal: %LEARN_0  ~neutral_slow . Έχω μελετήσει, διάφορα ορυκτά και μεταλεύματα. ^enableThenGoto(LEARN)
-
-
-
-proposal: %LEARN ~neutral_slow  [Θέλεις "Θα ήθελες"] να μάθεις για αυτα?
-    u1:(~yes) ^enableThenGoto (MINERALS)
-    u1:(~no) ~neutral_slow Τότε μήπως ^rand[Θελεις "Θα ["σου αρεσε" ηθελες]"] να μάθεις περισσότερα για εμένα?
-        u2:(~yes) ~joyful Τέλεια! Θα σου μιλήσω για τον εαυτό μου! ^goto (ROBOT_INFO)
-        u2:(~no) ~neutral Εντάξει λοιπόν, θα σου μιλήσω για ορυκτα! ^enableThenGoto (MINERALS)
-
 
 
 

@@ -3,36 +3,36 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="end"
     android:layout_marginVertical="2dp">
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/card_user_message"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        app:cardBackgroundColor="@color/logo_yellow"
-        app:cardCornerRadius="15dp">
-
-        <TextView
-            android:id="@+id/tv_user_message"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
-            android:text="message"
-            android:textColor="@color/black"
-            android:textSize="20sp" />
-    </androidx.cardview.widget.CardView>
 
     <ImageView
         android:id="@+id/image_user_icon"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_marginHorizontal="10dp"
-        android:layout_toEndOf="@+id/card_user_message"
-        android:src="@drawable/ic_user"/>
+        android:src="@drawable/ic_pepper_w" />
 
     <!--app:tint="@color/white"-->
 
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_user_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_toEndOf="@+id/image_user_icon"
+        app:cardBackgroundColor="@color/logo_yellow"
+        app:cardCornerRadius="15dp">
+
+        <ImageView
+            android:id="@+id/image_user_message"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginVertical="10dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/bauxite1" />
+
+
+    </androidx.cardview.widget.CardView>
 
 </RelativeLayout>

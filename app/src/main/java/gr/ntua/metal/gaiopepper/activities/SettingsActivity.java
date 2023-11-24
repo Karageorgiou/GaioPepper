@@ -30,6 +30,8 @@ public class SettingsActivity extends AppCompatActivity implements RobotLifecycl
     public Holder holderBA;
 
 
+    //todo: transfer RobotLifecycleCallbacks to Main activity and pass prefs to Main activity
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

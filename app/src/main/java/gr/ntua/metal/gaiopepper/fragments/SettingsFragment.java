@@ -25,35 +25,35 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.preferences_root, rootKey);
 
-        SettingsActivity activity = (SettingsActivity) getActivity();
-        assert activity != null;
+        SettingsActivity settingsActivity = (SettingsActivity) getActivity();
+        assert settingsActivity != null;
 
         findPreferences();
 
         prefAutonomousBlinking.setOnPreferenceChangeListener((preference11, newValue) -> {
             Log.i(TAG, "Preference Autonomous Blinking set to: " + newValue.toString());
             if (newValue.equals(true)) {
-                activity.startAutonomousBlinking(activity.holderAB);
+                settingsActivity.startAutonomousBlinking(settingsActivity.holderAB);
             } else if (newValue.equals(false)) {
-                activity.stopAutonomousBlinking(activity.qiContext);
+                settingsActivity.stopAutonomousBlinking(settingsActivity.qiContext);
             }
             return true;
         });
         prefBackgroundMovement.setOnPreferenceChangeListener((preference12, newValue) -> {
             Log.i(TAG, "Preference Background Movement set to: " + newValue.toString());
             if (newValue.equals(true)) {
-                activity.startBackgroundMovement(activity.holderBM);
+                settingsActivity.startBackgroundMovement(settingsActivity.holderBM);
             } else if (newValue.equals(false)) {
-                activity.stopBackgroundMovement(activity.qiContext);
+                settingsActivity.stopBackgroundMovement(settingsActivity.qiContext);
             }
             return true;
         });
         prefBasicAwareness.setOnPreferenceChangeListener((preference13, newValue) -> {
             Log.i(TAG, "Preference Basic Awareness set to: " + newValue.toString());
             if (newValue.equals(true)) {
-                activity.startBasicAwareness(activity.holderBA);
+                settingsActivity.startBasicAwareness(settingsActivity.holderBA);
             } else if (newValue.equals(false)) {
-                activity.stopBasicAwareness(activity.qiContext);
+                settingsActivity.stopBasicAwareness(settingsActivity.qiContext);
             }
             return true;
         });

@@ -17,13 +17,14 @@ public class MessageViewHolder extends RecyclerView.ViewHolder {
     public ImageView imageView;
     CardView cardView;
     public TextView textView;
+    public ImageView imageMessageView;
 
     public MessageViewHolder(@NonNull View itemView) {
         super(itemView);
-        //Log.i(TAG, "Created");
 
         imageView = itemView.findViewById(R.id.image_user_icon);
         cardView = itemView.findViewById(R.id.card_user_message);
         textView = itemView.findViewById(R.id.tv_user_message);
+        imageMessageView = itemView.findViewById(R.id.image_user_message);
     }
 }

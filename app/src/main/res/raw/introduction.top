@@ -1,0 +1,68 @@
+topic: ~introduction()
+
+
+#u:(e:Dialog/NotUnderstood)
+#[Συγγνώμη "Με συγχωρείτε"]. Δεν κατάλαβα.
+
+u:(Τι ωρα είναι) ^currentTime
+
+#pronunciation:(γεια) [για]
+
+u:(~greetings_human)
+^rand ~greetings_pepper ^stayInScope
+    u1:(~whats_your_name)
+    ^rand ~my_name_is ~p200 Πέπερ. ~p500 Εσένα ^rand ~whats_your_name ? ^stayInScope
+        u2: ({~my_name_is} _~name)
+        ^rand[Χάρηκα Χαίρομαι] για την γνωριμία ~p200 $1 $name=$1 ^stayInScope
+    u1:(~how_are_you)
+    ^rand["Μιά χαρά" "Καλά" "Τέλεια" "Πολύ ωραία" "Δε θα μπορούσα καλύτερα"]. Εσυ? ^stayInScope
+        u2:(~good)
+        Χαίρομαι ~p200 που είσαι καλά. Θέλεις να μιλήσουμε για ορυκτά? ^stayInScope
+            u3:(~yes)
+            Τέλεια. ^enableThenGoto(MINERALS)
+            u3:(~no)
+            Κρίμα. ~p1000 Μήπως ^rand[Θελεις "Θα ["σου άρεσε" ήθελες]"] ["να μάθεις περισσότερα" "σου [πω μιλήσω]"] για εμένα? ^stayInScope
+                u4:(~yes)
+                Τέλεια. ^enableThenGoto(MINERALS)
+                u4:(~no)
+                Καλά, όπως θέλεις.
+        u2:([Χάλια "Δεν είμαι καλά" Βαριέμαι])
+        Μην ανυσηχείς, ^rand["θα σου φτιάξω εγώ τη διάθεση." "έχω πολύ ενδιαφέροντα πράγματα να συζητήσουμε."] ^enableThenGoto(LEARN)
+
+
+proposal: %INTRO  Γειά σας. Είμαι ο Πέπερ.  Καλωσήρθατε στο Ορυκτολογικό Μουσείο, Γαιο-Οραμα.
+                  Είμαι ο ρομποτικός σας φίλος, και θα σας βοηθήσω, να ανακαλύψετε ,τον κόσμο της ορυκτολογίας. ^enableThenGoto(LEARN)
+
+
+
+proposal: %LEARN Έχω μελετήσει διάφορα ορυκτά και μεταλλεύματα. ~p1000 [Θέλεις "Θα ήθελες"] να μάθεις για αυτα?
+    u1:(~yes) ^enableThenGoto (MINERALS)
+    u1:(~no)  Τότε μήπως ^rand[Θελεις "Θα ["σου άρεσε" ήθελες]"] να μάθεις περισσότερα για εμένα?
+        u2:(~yes)  Τέλεια! Θα σου μιλήσω για τον εαυτό μου! ^goto (ROBOT_INFO)
+        u2:(~no)  Εντάξει λοιπόν, θα σου μιλήσω για ορυκτα! ^enableThenGoto (MINERALS)
+
+
+
+
+
+proposal: %MINERALS ~good . ~p1500 ^rand ~conversation
+    u:(~talk_about Βωξίτη) ^enableThenGotoInTopic(BAUXITE,bauxite)
+    #u:(~talk_about Γύψο) ^enableThenGoto (GYPSUM)
+    #u:(~talk_about Θείο) ^enableThenGoto (SULFUR)
+    #u:(~talk_about Κορούνδιο ) ^enableThenGoto(CORUNDIUM_1)
+    #u:(~talk_about Σιδηροπυρίτη) ^enableThenGoto (PYRITE)
+    #u:(~talk_about Φθορίτη) ^enableThenGoto (FLUORITE)
+    #u:(~talk_about Χαλαζία) ^enableThenGoto (QUARTZ)
+    #u:(~talk_about Χρωμίτη) ^enableThenGoto (CHROMITE)
+    #u:({~i_want} {να} {~talk} για εσένα) ^enableThenGoto(ROBOT_INFO)
+    #u:(~arigato) ^enableThenGoto (MINERALS)
+    #u:(~close) ^goto(GOODBYE)
+
+
+
+
+proposal: %ROBOT_INFO Είμαι ο Πέππερ ~p500 και έχω γεννηθεί στη Γαλλία, ~p500 ήρθα όμως εδώ στο Πολυτεχνείο, ~p500 έμαθα Ελληνικά και τώρα ~p500 μαθαίνω για τον κόσμο της ορυκτολογίας.^enableThenGoto(MINERALS)
+
+proposal:%GOODBYE ~neutral_slow Ευχαριστώ Πολύ. ~p1000 Γειά σας.   ^endDiscuss(stopped by user)
+
+

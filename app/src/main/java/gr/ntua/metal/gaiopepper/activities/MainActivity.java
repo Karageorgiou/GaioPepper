@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
 
+import com.aldebaran.qi.Function;
 import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.QiSDK;
@@ -22,9 +23,17 @@ import com.aldebaran.qi.sdk.builder.TopicBuilder;
 import com.aldebaran.qi.sdk.design.activity.RobotActivity;
 import com.aldebaran.qi.sdk.design.activity.conversationstatus.SpeechBarDisplayPosition;
 import com.aldebaran.qi.sdk.design.activity.conversationstatus.SpeechBarDisplayStrategy;
+import com.aldebaran.qi.sdk.object.context.RobotContext;
+import com.aldebaran.qi.sdk.object.conversation.AutonomousReaction;
 import com.aldebaran.qi.sdk.object.conversation.Chat;
+import com.aldebaran.qi.sdk.object.conversation.Chatbot;
+import com.aldebaran.qi.sdk.object.conversation.ChatbotReaction;
+import com.aldebaran.qi.sdk.object.conversation.ChatbotReactionHandlingStatus;
+import com.aldebaran.qi.sdk.object.conversation.Conversation;
 import com.aldebaran.qi.sdk.object.conversation.Phrase;
 import com.aldebaran.qi.sdk.object.conversation.QiChatbot;
+import com.aldebaran.qi.sdk.object.conversation.ReplyReaction;
+import com.aldebaran.qi.sdk.object.conversation.SpeechEngine;
 import com.aldebaran.qi.sdk.object.conversation.Topic;
 import com.aldebaran.qi.sdk.object.locale.Language;
 import com.aldebaran.qi.sdk.object.locale.Locale;
@@ -36,11 +45,13 @@ import com.google.android.material.textfield.TextInputLayout;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.adapters.MessageAdapter;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
 
+import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutRobotImage;
 import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutUser;
 import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutRobot;
 
@@ -53,6 +64,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private QiContext qiContext;
     private final Locale localeGR = new Locale(Language.GREEK, Region.GREECE);
     private final Locale localeEN = new Locale(Language.ENGLISH, Region.UNITED_STATES);
+
+    private SpeechEngine speechEngine;
 
     private FloatingActionButton fabSettings;
     private FloatingActionButton fabEncyclopedia;
@@ -67,7 +80,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     private List<MessageItem> messageItemList;
     private MessageAdapter messageAdapter;
-
 
 
     @Override
@@ -111,14 +123,37 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         this.qiContext = qiContext;
         addListeners();
 
+        makeSpeechEngine(qiContext);
+
+
         QiChatbot chatbot = buildQiChatbot();
         chat = buildChat(chatbot);
+        runChat(chat);
+    }
+
+    private void runChat(Chat chat) {
         chatFuture = chat.async().run();
         chatFuture.thenConsume(future -> {
             if (future.hasError()) {
                 Log.e(TAG, "Chat finished with error: " + future.getErrorMessage());
             } else {
                 Log.e(TAG, "Chat finished: " + future.get().toString());
+            }
+        });
+    }
+
+    private void makeSpeechEngine(QiContext qiContext) {
+        speechEngine = qiContext.getConversation().makeSpeechEngine(qiContext.getRobotContext());
+        speechEngine.addOnSayingChangedListener(phrase -> {
+            String sayingText = phrase.getText();
+            if (!sayingText.isEmpty()) {
+                Log.i(TAG, "[SPEECH ENGINE] Pepper Reply: " + sayingText);
+                messageItemList.add(new MessageItem(LayoutRobot, R.drawable.ic_pepper_w, sayingText));
+                runOnUiThread(() -> {
+                    messageAdapter.notifyItemInserted(messageAdapter.getItemCount() - 1);
+                    recyclerView.scrollToPosition(messageItemList.size() - 1);
+                });
+
             }
         });
     }
@@ -155,81 +190,39 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 Log.d(TAG, "User message: " + userPhrase.getText());
 
 
-                /*Future<ReplyReaction> replyToFuture = chatbot.async().replyTo(userPhrase, localeEN);
-                replyToFuture.thenCompose(value -> {
-
-                    if (value.hasError()) {
-                        Log.d(TAG, "replyToFuture ERROR: " + value.getErrorMessage());
-
+                chatFuture.requestCancellation();
+                Future<ReplyReaction> replyToFuture = chatbot.async().replyTo(userPhrase, localeEN);
+                replyToFuture.thenConsume(replyReactionFuture -> {
+                    if (replyReactionFuture.hasError()) {
+                        Log.e(TAG, "Reply Reaction Future [ERROR]: " + replyReactionFuture.getErrorMessage());
                     } else {
-                        ReplyReaction replyReaction = value.get();
-                        replyReaction.getChatbotReaction().runWith(new SpeechEngine() {
-                            @Override
-                            public Async async() {
-                                return null;
-                            }
-
-                            @Override
-                            public Say makeSay(Phrase phrase) {
-                                Log.d(TAG, "makeSay: " + phrase);
-                                return null;
-                            }
-
-                            @Override
-                            public Say makeSay(Phrase phrase, BodyLanguageOption bodyLanguageOption) {
-                                Log.d(TAG, "makeSay: " + phrase);
-
-                                return null;
-                            }
-
-                            @Override
-                            public Say makeSay(Phrase phrase, BodyLanguageOption bodyLanguageOption, Locale locale) {
-                                Log.d(TAG, "makeSay: " + phrase);
-
-                                return null;
-                            }
-
-                            @Override
-                            public Phrase getSaying() {
-                                return null;
-                            }
-
-                            @Override
-                            public void setOnSayingChangedListener(OnSayingChangedListener onSayingChangedListener) {
-
-                            }
-
-                            @Override
-                            public void addOnSayingChangedListener(OnSayingChangedListener onSayingChangedListener) {
-
-                            }
-
-                            @Override
-                            public void removeOnSayingChangedListener(OnSayingChangedListener onSayingChangedListener) {
-
-                            }
-
-                            @Override
-                            public void removeAllOnSayingChangedListeners() {
-
+                        ReplyReaction replyReaction = replyReactionFuture.get();
+                        Future<ChatbotReaction> getChatbotReactionFuture = replyReaction.async().getChatbotReaction();
+                        getChatbotReactionFuture.thenConsume(chatbotReactionFuture -> {
+                            if (chatbotReactionFuture.hasError()){
+                                Log.e(TAG, "Chatbot Reaction Future [ERROR]: " + chatbotReactionFuture.getErrorMessage());
+                            } else {
+                                ChatbotReaction chatbotReaction = chatbotReactionFuture.get();
+                                Future<Void> runWithFuture = chatbotReaction.async().runWith(speechEngine);
+                                runWithFuture.thenConsume(future -> {
+                                    if (future.hasError()){
+                                        Log.e(TAG, "runWith Future [ERROR]: " + future.getErrorMessage());
+                                    } else {
+                                        chat = buildChat(chatbot);
+                                        runChat(chat);
+                                    }
+                                });
                             }
                         });
-                        Log.d(TAG, "replyToFuture PRIOR: " + replyReaction.getReplyPriority());
-                        Log.d(TAG, "replyToFuture SAYING: " + replyReaction.getChatbotReaction().getChatbotReactionHandlingStatus());
-                        Log.d(TAG, "replyToFuture QIVALUE: " + replyReaction.getReplyPriority().getQiValue());
                     }
-                    return null;
-                });*/
+                });
 
-
-                messageItemList.add(new MessageItem(LayoutUser, R.drawable.icons8_user_100, message));
-                messageAdapter.notifyItemInserted(messageAdapter.getItemCount() -1);
-
+                messageItemList.add(new MessageItem(LayoutUser, R.drawable.ic_user, message));
+                messageAdapter.notifyItemInserted(messageAdapter.getItemCount() - 1);
                 textInputEditText.getText().clear();
             }
         }
     }
-
 
     private void findViews() {
         try {
@@ -272,18 +265,35 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     private void removeListeners() {
-
+        chat.removeAllOnHeardListeners();
+        chat.removeAllOnFallbackReplyFoundForListeners();
+        chat.removeAllOnHearingChangedListeners();
+        chat.removeAllOnListeningChangedListeners();
+        chat.removeAllOnNoReplyFoundForListeners();
+        chat.removeAllOnNoPhraseRecognizedListeners();
+        chat.removeAllOnNormalReplyFoundForListeners();
+        chat.removeAllOnSayingChangedListeners();
+        chat.removeAllOnStartedListeners();
     }
 
     private QiChatbot buildQiChatbot() {
+
         Topic lexicon = TopicBuilder
                 .with(qiContext)
                 .withResource(R.raw.lexicon)
                 .build();
-        Topic topic_minerals = TopicBuilder
+
+        Topic introduction = TopicBuilder
                 .with(qiContext)
-                .withResource(R.raw.topic_minerals)
+                .withResource(R.raw.introduction)
                 .build();
+
+        Topic bauxite = TopicBuilder
+                .with(qiContext)
+                .withResource(R.raw.bauxite)
+                .build();
+
+
         Topic test = TopicBuilder
                 .with(qiContext)
                 .withResource(R.raw.test_topic)
@@ -291,9 +301,10 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
 
         List<Topic> topicList = new LinkedList<Topic>();
-        topicList.add(test);
         //topicList.add(lexicon);
-        //topicList.add(topic_minerals);
+        //topicList.add(introduction);
+        //topicList.add(bauxite);
+        topicList.add(test);
 
 
         chatbot = QiChatbotBuilder
@@ -304,12 +315,41 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         chatbot.addOnBookmarkReachedListener(bookmark -> {
             Log.i(TAG, "Bookmark " + bookmark.getName() + " reached.");
+            boolean update = false;
+            switch (bookmark.getName()) {
+                case "BAUXITE":
+                    messageItemList.add(new MessageItem(LayoutRobotImage, R.drawable.ic_pepper_w, R.drawable.red_bauxite_pissoliths));
+                    update = true;
+                    break;
+                case "PISOLITH":
+                    messageItemList.add(new MessageItem(LayoutRobotImage, R.drawable.ic_pepper_w, R.drawable.white_bauxite));
+                    update = true;
+                    break;
+                case "ALUMINIUM":
+                    messageItemList.add(new MessageItem(LayoutRobotImage, R.drawable.ic_pepper_w, R.drawable.aluminium));
+                    update = true;
+                    break;
+                default:
+                    break;
+            }
 
+            if (update) {
+                runOnUiThread(() -> {
+                    messageAdapter.notifyItemInserted(messageAdapter.getItemCount());
+                    recyclerView.scrollToPosition(messageItemList.size() - 1);
+                });
+
+            }
         });
 
         chatbot.addOnEndedListener(endReason -> {
             Log.i(TAG, "Chatbot ended for reason: " + endReason);
             chatFuture.requestCancellation();
+        });
+
+        chatbot.addOnAutonomousReactionChangedListener(autonomousReaction -> {
+            Log.d(TAG,"autonomousssss");
+            autonomousReaction.getChatbotReaction().runWith(speechEngine);
         });
 
         return chatbot;
@@ -318,8 +358,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private Chat buildChat(QiChatbot chatbot) {
         Chat chat = ChatBuilder
                 .with(qiContext)
-                //.withLocale(locale_greek)
                 .withChatbot(chatbot)
+                .withLocale(localeEN)
                 .build();
 
 
@@ -339,31 +379,18 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             String heardText = heardPhrase.getText();
             if (!heardText.isEmpty()) {
                 Log.i(TAG, "[CHAT] Heard phrase: " + heardPhrase.getText());
-                messageItemList.add(new MessageItem(LayoutUser, R.drawable.icons8_user_100, heardText));
-                //messageAdapter.notifyDataSetChanged();
+                messageItemList.add(new MessageItem(LayoutUser, R.drawable.ic_user, heardText));
 
-                /*synchronized (messageAdapter) {
-                    messageItemList.add(new MessageItem(LayoutUser, R.drawable.icons8_user_100, heardText));
-                    messageAdapter.notify();
-                }*/
-                /*runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        messageItemList.add(new MessageItem(LayoutUser, R.drawable.icons8_user_100, heardText));
-                        messageAdapter.notify();
-                    }
-                });*/
             }
         });
         chat.addOnSayingChangedListener(sayingPhrase -> {
             String sayingText = sayingPhrase.getText();
             if (!sayingText.isEmpty()) {
                 Log.i(TAG, "[CHAT] Pepper Reply: " + sayingText);
-                messageItemList.add(new MessageItem(LayoutRobot, R.drawable.icons8_user_100, sayingText));
+                messageItemList.add(new MessageItem(LayoutRobot, R.drawable.ic_pepper_w, sayingText));
                 runOnUiThread(() -> {
-                    //messageAdapter.notifyDataSetChanged();
-                    messageAdapter.notifyItemInserted(messageAdapter.getItemCount() -1);
-                    recyclerView.scrollToPosition(messageItemList.size()-1);
+                    messageAdapter.notifyItemInserted(messageAdapter.getItemCount() - 1);
+                    recyclerView.scrollToPosition(messageItemList.size() - 1);
                 });
 
             }
@@ -381,6 +408,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         chat.addOnNoReplyFoundForListener(input -> {
             Log.i(TAG, "[CHAT] NO Reply found for user message: " + input.getText());
         });
+
 
         return chat;
     }

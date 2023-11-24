@@ -11,6 +11,7 @@ import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.holders.MessageViewHolder;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
 
+import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutRobotImage;
 import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutUser;
 import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutRobot;
 
@@ -34,6 +35,8 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageViewHolder> {
                 return LayoutUser;
             case 1:
                 return LayoutRobot;
+            case 2:
+                return LayoutRobotImage;
             default:
                 return -1;
         }
@@ -51,6 +54,9 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageViewHolder> {
             case LayoutRobot:
                 messageViewHolder = new MessageViewHolder(LayoutInflater.from(context).inflate(R.layout.robot_message_item_view, parent, false));
                 break;
+            case LayoutRobotImage:
+                messageViewHolder = new MessageViewHolder(LayoutInflater.from(context).inflate(R.layout.robot_message_image_view, parent, false));
+                break;
             default:
                 throw new IllegalStateException("Unexpected value: " + viewType);
         }
@@ -62,7 +68,12 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageViewHolder> {
         //Log.i(TAG, "onBindViewHolder");
 
         holder.imageView.setImageResource(messageItemList.get(position).getImage());
-        holder.textView.setText(messageItemList.get(position).getMessage());
+        if (messageItemList.get(position).getViewType() == LayoutRobot || messageItemList.get(position).getViewType() == LayoutUser) {
+            holder.textView.setText(messageItemList.get(position).getMessage());
+        } else if (messageItemList.get(position).getViewType() == LayoutRobotImage) {
+            holder.imageMessageView.setImageResource(messageItemList.get(position).getImageMessage());
+        }
+
     }
 
     @Override
