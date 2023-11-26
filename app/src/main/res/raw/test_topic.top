@@ -3,8 +3,20 @@ topic: ~test_topic()
 
 # Defining extra concepts out of words or group of words
 concept:(hello) [hello hi hey "good morning" greetings]
+concept:(yes) [yes y]
+concept:(no) [no n]
 
 # Replying to speech
-%BOOKMARK0 u:(~hello) ~hello ^goto (BOOKMARK1)
+%BOOKMARK0 u:(~hello) ^rand~hello ^stayInScope
+    u1:(~yes) ^goto (BOOKMARK1)
 
-%BOOKMARK1 u: (yo) [yo yoyo yoyoyo]
+proposal: %BOOKMARK1 ^rand[yo yoyo yoyoyo] yes or no? ^stayInScope
+    u1:(~yes) ^enableThenGoto (LEARN)
+    u1:(~no)  OK yes or no ^stayInScope
+        u2:(~yes)  yeeeees ^goto (LEARN)
+        u2:(~no)  NOOOOOOOO ^enableThenGoto (BOOKMARK0)
+
+
+proposal: %LEARN THIS IS LEARN START OVER? ^stayInScope
+    u1:(~yes) ^enableThenGoto (BOOKMARK0)
+    u1:(~no)  OK

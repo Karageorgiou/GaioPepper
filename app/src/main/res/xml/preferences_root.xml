@@ -1,39 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory app:title="Autonomous Abilities">
-
         <SwitchPreferenceCompat
-            app:key="autonomous_blinking"
+            android:defaultValue="true"
+            app:key="@string/AUTONOMOUS_BLINKING"
             app:summary="Blinks eye LEDs periodically. Color changes to pink when the robot sees a new user."
             app:title="Autonomous Blinking" />
         <SwitchPreferenceCompat
-            app:key="background_movement"
+            android:defaultValue="true"
+            app:key="@string/BACKGROUND_MOVEMENT"
             app:summary="Triggers slight movements of the upper body that the robot does autonomously."
             app:title="Background Movement" />
         <SwitchPreferenceCompat
-            app:key="basic_awareness"
+            android:defaultValue="true"
+            app:key="@string/BASIC_AWARENESS"
             app:summary="Follows the engaged person with his head and body. Reacts to hands, bumpers &amp; human detection"
             app:title="Basic Awareness" />
-
-
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="Audio">
 
+    <PreferenceCategory app:title="Conversation">
+        <ListPreference
+            android:defaultValue="ORAL"
+            app:entries="@array/conversation_choices_entries"
+            app:entryValues="@array/conversation_choices_values"
+            app:key="@string/CONVERSATION_MODE"
+            app:title="Select Conversation Mode"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+
+    <PreferenceCategory app:title="Audio">
         <SeekBarPreference
+            android:defaultValue="50"
             app:key="volume"
             app:showSeekBarValue="true"
-
-            app:title="Volume"/>
+            app:title="Volume" />
 
         <SwitchPreferenceCompat
+            android:defaultValue="true"
             app:key="microphone"
             app:summaryOff="Ανενεργό"
             app:summaryOn="Ενεργό"
             app:title="Robot Listening" />
-
     </PreferenceCategory>
 
 </PreferenceScreen>

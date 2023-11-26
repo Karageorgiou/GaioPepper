@@ -4,6 +4,7 @@ public class MessageItem {
     public static final int LayoutUser = 0;
     public static final int LayoutRobot = 1;
     public static final int LayoutRobotImage = 2;
+    public static final int LayoutUserImage = 3;
 
 
     private int viewType;

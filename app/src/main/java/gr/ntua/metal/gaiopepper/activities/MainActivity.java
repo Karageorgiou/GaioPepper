@@ -1,6 +1,10 @@
 package gr.ntua.metal.gaiopepper.activities;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -18,6 +22,7 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.QiSDK;
 import com.aldebaran.qi.sdk.RobotLifecycleCallbacks;
 import com.aldebaran.qi.sdk.builder.ChatBuilder;
+import com.aldebaran.qi.sdk.builder.HolderBuilder;
 import com.aldebaran.qi.sdk.builder.QiChatbotBuilder;
 import com.aldebaran.qi.sdk.builder.TopicBuilder;
 import com.aldebaran.qi.sdk.design.activity.RobotActivity;
@@ -35,23 +40,30 @@ import com.aldebaran.qi.sdk.object.conversation.QiChatbot;
 import com.aldebaran.qi.sdk.object.conversation.ReplyReaction;
 import com.aldebaran.qi.sdk.object.conversation.SpeechEngine;
 import com.aldebaran.qi.sdk.object.conversation.Topic;
+import com.aldebaran.qi.sdk.object.holder.AutonomousAbilitiesType;
 import com.aldebaran.qi.sdk.object.locale.Language;
 import com.aldebaran.qi.sdk.object.locale.Locale;
 import com.aldebaran.qi.sdk.object.locale.Region;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
+import gr.ntua.metal.gaiopepper.AutonomousAbilitiesController;
 import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.adapters.MessageAdapter;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
 
 import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutRobotImage;
+import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutUserImage;
 import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutUser;
 import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutRobot;
 
@@ -73,6 +85,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private TextInputEditText textInputEditText;
     private RecyclerView recyclerView;
     private ImageButton buttonSend;
+    private ConstraintLayout constraintLayoutBottom;
 
     private QiChatbot chatbot;
     private Chat chat;
@@ -86,6 +99,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     protected void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "onCreate");
         super.onCreate(savedInstanceState);
+        PreferenceManager.setDefaultValues(this, R.xml.preferences_root, false);
         QiSDK.register(this, this);
         this.setContentView(R.layout.activity_main);
 
@@ -121,42 +135,21 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     public void onRobotFocusGained(QiContext qiContext) {
         Log.i(TAG, "onRobotFocusGained");
         this.qiContext = qiContext;
-        addListeners();
 
         makeSpeechEngine(qiContext);
 
+        chat = buildChat(
+                buildQiChatbot(
+                        buildTopicList(
+                                new LinkedList<Integer>(Arrays.asList(R.raw.test_topic))), localeEN));
 
-        QiChatbot chatbot = buildQiChatbot();
-        chat = buildChat(chatbot);
-        runChat(chat);
+        applyPreferences(qiContext);
+
+        addListeners();
+
+
     }
 
-    private void runChat(Chat chat) {
-        chatFuture = chat.async().run();
-        chatFuture.thenConsume(future -> {
-            if (future.hasError()) {
-                Log.e(TAG, "Chat finished with error: " + future.getErrorMessage());
-            } else {
-                Log.e(TAG, "Chat finished: " + future.get().toString());
-            }
-        });
-    }
-
-    private void makeSpeechEngine(QiContext qiContext) {
-        speechEngine = qiContext.getConversation().makeSpeechEngine(qiContext.getRobotContext());
-        speechEngine.addOnSayingChangedListener(phrase -> {
-            String sayingText = phrase.getText();
-            if (!sayingText.isEmpty()) {
-                Log.i(TAG, "[SPEECH ENGINE] Pepper Reply: " + sayingText);
-                messageItemList.add(new MessageItem(LayoutRobot, R.drawable.ic_pepper_w, sayingText));
-                runOnUiThread(() -> {
-                    messageAdapter.notifyItemInserted(messageAdapter.getItemCount() - 1);
-                    recyclerView.scrollToPosition(messageItemList.size() - 1);
-                });
-
-            }
-        });
-    }
 
     @Override
     public void onRobotFocusLost() {
@@ -168,7 +161,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     @Override
     public void onRobotFocusRefused(String reason) {
         Log.i(TAG, "onRobotFocusRefused: " + reason);
-        // The robot focus is refused.
     }
 
     @Override
@@ -184,44 +176,44 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             textInputLayout.clearFocus();
             hideSoftKeyboard(textInputLayout);
         } else if (viewID == R.id.btn_send) {
-            String message = textInputEditText.getText().toString();
+            String message = Objects.requireNonNull(textInputEditText.getText()).toString();
             if (!message.isEmpty()) {
                 Phrase userPhrase = new Phrase(message);
                 Log.d(TAG, "User message: " + userPhrase.getText());
+                updateRecyclerView(LayoutUser, message);
+                replyTo(userPhrase, localeEN);
+                /*messageItemList.add(new MessageItem(LayoutUser, R.drawable.ic_user, message));
+                messageAdapter.notifyItemInserted(messageAdapter.getItemCount() - 1);*/
+                textInputEditText.getText().clear();
+            }
+        }
+    }
 
-
-                chatFuture.requestCancellation();
-                Future<ReplyReaction> replyToFuture = chatbot.async().replyTo(userPhrase, localeEN);
-                replyToFuture.thenConsume(replyReactionFuture -> {
-                    if (replyReactionFuture.hasError()) {
-                        Log.e(TAG, "Reply Reaction Future [ERROR]: " + replyReactionFuture.getErrorMessage());
+    private void replyTo(Phrase userPhrase, Locale locale) {
+        Future<ReplyReaction> replyToFuture = chatbot.async().replyTo(userPhrase, locale);
+        replyToFuture.thenConsume(replyReactionFuture -> {
+            if (replyReactionFuture.hasError()) {
+                Log.e(TAG, "Reply Reaction Future [ERROR]: " + replyReactionFuture.getErrorMessage());
+            } else {
+                ReplyReaction replyReaction = replyReactionFuture.get();
+                Future<ChatbotReaction> getChatbotReactionFuture = replyReaction.async().getChatbotReaction();
+                getChatbotReactionFuture.thenConsume(chatbotReactionFuture -> {
+                    if (chatbotReactionFuture.hasError()) {
+                        Log.e(TAG, "Chatbot Reaction Future [ERROR]: " + chatbotReactionFuture.getErrorMessage());
                     } else {
-                        ReplyReaction replyReaction = replyReactionFuture.get();
-                        Future<ChatbotReaction> getChatbotReactionFuture = replyReaction.async().getChatbotReaction();
-                        getChatbotReactionFuture.thenConsume(chatbotReactionFuture -> {
-                            if (chatbotReactionFuture.hasError()){
-                                Log.e(TAG, "Chatbot Reaction Future [ERROR]: " + chatbotReactionFuture.getErrorMessage());
+                        ChatbotReaction chatbotReaction = chatbotReactionFuture.get();
+                        Future<Void> runWithFuture = chatbotReaction.async().runWith(speechEngine);
+                        runWithFuture.thenConsume(future -> {
+                            if (future.hasError()) {
+                                Log.e(TAG, "runWith Future [ERROR]: " + future.getErrorMessage());
                             } else {
-                                ChatbotReaction chatbotReaction = chatbotReactionFuture.get();
-                                Future<Void> runWithFuture = chatbotReaction.async().runWith(speechEngine);
-                                runWithFuture.thenConsume(future -> {
-                                    if (future.hasError()){
-                                        Log.e(TAG, "runWith Future [ERROR]: " + future.getErrorMessage());
-                                    } else {
-                                        chat = buildChat(chatbot);
-                                        runChat(chat);
-                                    }
-                                });
+
                             }
                         });
                     }
                 });
-
-                messageItemList.add(new MessageItem(LayoutUser, R.drawable.ic_user, message));
-                messageAdapter.notifyItemInserted(messageAdapter.getItemCount() - 1);
-                textInputEditText.getText().clear();
             }
-        }
+        });
     }
 
     private void findViews() {
@@ -255,6 +247,11 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         } catch (Exception e) {
             e.printStackTrace();
         }
+        try {
+            constraintLayoutBottom = findViewById(R.id.constraint_bottom);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void addListeners() {
@@ -276,84 +273,157 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         chat.removeAllOnStartedListeners();
     }
 
-    private QiChatbot buildQiChatbot() {
+    private void applyPreferences(QiContext qiContext) {
+        boolean autonomousBlinking = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.AUTONOMOUS_BLINKING), true);
+        boolean backgroundMovement = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.BACKGROUND_MOVEMENT), true);
+        boolean basicAwareness = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.BASIC_AWARENESS), true);
+        String conversationMode = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_MODE), "NONE");
 
-        Topic lexicon = TopicBuilder
-                .with(qiContext)
-                .withResource(R.raw.lexicon)
-                .build();
+        AutonomousAbilitiesController.buildHolders(qiContext);
 
-        Topic introduction = TopicBuilder
-                .with(qiContext)
-                .withResource(R.raw.introduction)
-                .build();
+        Log.d(TAG, "[applyPreferences] autonomousBlinking: " + autonomousBlinking);
 
-        Topic bauxite = TopicBuilder
-                .with(qiContext)
-                .withResource(R.raw.bauxite)
-                .build();
+        if (autonomousBlinking) {
+            AutonomousAbilitiesController.startAutonomousBlinking();
+        } else {
+            AutonomousAbilitiesController.stopAutonomousBlinking(qiContext);
+        }
+        if (backgroundMovement) {
+            AutonomousAbilitiesController.startBackgroundMovement();
+        } else {
+            AutonomousAbilitiesController.stopBackgroundMovement(qiContext);
+        }
+        if (basicAwareness) {
+            AutonomousAbilitiesController.startBasicAwareness();
+        } else {
+            AutonomousAbilitiesController.stopBasicAwareness(qiContext);
+        }
+
+        Log.d(TAG, "[applyPreferences] conversationMode: " + conversationMode);
+        if (Objects.equals(conversationMode, getString(R.string.NONE))) {
+            if (chatFuture != null) {
+                if (!chatFuture.isSuccess() || !chatFuture.isCancelled() || !chatFuture.isDone()) {
+                    chatFuture.requestCancellation();
+                }
+            }
+        } else if (Objects.equals(conversationMode, getString(R.string.ORAL_CONVERSATION))) {
+            hideTextInput();
+            runChat(chat);
+        } else if (Objects.equals(conversationMode, getString(R.string.WRITTEN_CONVERSATION))) {
+            if (chatFuture != null) {
+                if (!chatFuture.isSuccess() || !chatFuture.isCancelled() || !chatFuture.isDone()) {
+                    chatFuture.requestCancellation();
+                }
+            }
+            showTextInput();
+        }
 
 
-        Topic test = TopicBuilder
-                .with(qiContext)
-                .withResource(R.raw.test_topic)
-                .build();
+    }
 
 
-        List<Topic> topicList = new LinkedList<Topic>();
-        //topicList.add(lexicon);
-        //topicList.add(introduction);
-        //topicList.add(bauxite);
-        topicList.add(test);
+    private void runChat(Chat chat) {
+        chatFuture = chat.async().run();
+        chatFuture.thenConsume(future -> {
+            if (future.hasError()) {
+                Log.e(TAG, "Chat finished with error: " + future.getErrorMessage());
+            } else {
+                Log.e(TAG, "Chat finished: " + future.get().toString());
+            }
+        });
+    }
 
+    private void makeSpeechEngine(QiContext qiContext) {
+        speechEngine = qiContext.getConversation().makeSpeechEngine(qiContext.getRobotContext());
+        speechEngine.addOnSayingChangedListener(phrase -> {
+            String sayingText = phrase.getText();
+            if (!sayingText.isEmpty()) {
+                Log.i(TAG, "[SPEECH ENGINE] Pepper Reply: " + sayingText);
+                updateRecyclerView(LayoutRobot, sayingText);
+            }
+        });
+    }
+
+    private QiChatbot buildQiChatbot(List<Topic> topicList, Locale locale) {
 
         chatbot = QiChatbotBuilder
                 .with(qiContext)
                 .withTopics(topicList)
-                .withLocale(localeEN)
+                .withLocale(locale)
                 .build();
-
         chatbot.addOnBookmarkReachedListener(bookmark -> {
             Log.i(TAG, "Bookmark " + bookmark.getName() + " reached.");
             boolean update = false;
             switch (bookmark.getName()) {
                 case "BAUXITE":
-                    messageItemList.add(new MessageItem(LayoutRobotImage, R.drawable.ic_pepper_w, R.drawable.red_bauxite_pissoliths));
-                    update = true;
+                    updateRecyclerView(LayoutRobotImage, R.drawable.red_bauxite_pissoliths);
                     break;
                 case "PISOLITH":
-                    messageItemList.add(new MessageItem(LayoutRobotImage, R.drawable.ic_pepper_w, R.drawable.white_bauxite));
-                    update = true;
+                    updateRecyclerView(LayoutRobotImage, R.drawable.white_bauxite);
                     break;
                 case "ALUMINIUM":
-                    messageItemList.add(new MessageItem(LayoutRobotImage, R.drawable.ic_pepper_w, R.drawable.aluminium));
-                    update = true;
+                    updateRecyclerView(LayoutRobotImage, R.drawable.aluminium);
                     break;
                 default:
                     break;
             }
-
-            if (update) {
-                runOnUiThread(() -> {
-                    messageAdapter.notifyItemInserted(messageAdapter.getItemCount());
-                    recyclerView.scrollToPosition(messageItemList.size() - 1);
-                });
-
-            }
         });
-
         chatbot.addOnEndedListener(endReason -> {
             Log.i(TAG, "Chatbot ended for reason: " + endReason);
             chatFuture.requestCancellation();
         });
-
         chatbot.addOnAutonomousReactionChangedListener(autonomousReaction -> {
-            Log.d(TAG,"autonomousssss");
+            Log.d(TAG, "autonomousssss");
             autonomousReaction.getChatbotReaction().runWith(speechEngine);
         });
-
         return chatbot;
     }
+
+    @NonNull
+    private List<Topic> buildTopicList(List<Integer> topics) {
+        List<Topic> topicList;
+        topicList = new LinkedList<Topic>();
+        for (int topicName:topics) {
+            Topic topic = TopicBuilder
+                    .with(qiContext)
+                    .withResource(topicName)
+                    .build();
+            topicList.add(topic);
+        }
+        return topicList;
+    }
+
+    private void updateRecyclerView(int messageLayout, int image) {
+        switch (messageLayout) {
+            case LayoutRobotImage:
+                messageItemList.add(new MessageItem(messageLayout, R.drawable.ic_pepper_w, image));
+                break;
+            case LayoutUserImage:
+                messageItemList.add(new MessageItem(messageLayout, R.drawable.ic_user, image));
+                break;
+        }
+        runOnUiThread(() -> {
+            messageAdapter.notifyItemInserted(messageAdapter.getItemCount());
+            recyclerView.scrollToPosition(messageItemList.size() - 1);
+        });
+    }
+
+    private void updateRecyclerView(int messageLayout, String message) {
+        Log.d(TAG, "msgLayout: " + messageLayout + " message: " + message);
+        switch (messageLayout) {
+            case LayoutRobot:
+                messageItemList.add(new MessageItem(messageLayout, R.drawable.ic_pepper_w, message));
+                break;
+            case LayoutUser:
+                messageItemList.add(new MessageItem(messageLayout, R.drawable.ic_user, message));
+                break;
+        }
+        runOnUiThread(() -> {
+            messageAdapter.notifyItemInserted(messageAdapter.getItemCount());
+            recyclerView.scrollToPosition(messageItemList.size() - 1);
+        });
+    }
+
 
     private Chat buildChat(QiChatbot chatbot) {
         Chat chat = ChatBuilder
@@ -361,8 +431,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 .withChatbot(chatbot)
                 .withLocale(localeEN)
                 .build();
-
-
         chat.addOnStartedListener(() -> {
             Log.i(TAG, "[CHAT] Chat started.");
 
@@ -379,20 +447,14 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             String heardText = heardPhrase.getText();
             if (!heardText.isEmpty()) {
                 Log.i(TAG, "[CHAT] Heard phrase: " + heardPhrase.getText());
-                messageItemList.add(new MessageItem(LayoutUser, R.drawable.ic_user, heardText));
-
+                updateRecyclerView(LayoutUser, heardText);
             }
         });
         chat.addOnSayingChangedListener(sayingPhrase -> {
             String sayingText = sayingPhrase.getText();
             if (!sayingText.isEmpty()) {
                 Log.i(TAG, "[CHAT] Pepper Reply: " + sayingText);
-                messageItemList.add(new MessageItem(LayoutRobot, R.drawable.ic_pepper_w, sayingText));
-                runOnUiThread(() -> {
-                    messageAdapter.notifyItemInserted(messageAdapter.getItemCount() - 1);
-                    recyclerView.scrollToPosition(messageItemList.size() - 1);
-                });
-
+                updateRecyclerView(LayoutRobot, sayingText);
             }
         });
         chat.addOnNormalReplyFoundForListener(input -> {
@@ -408,8 +470,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         chat.addOnNoReplyFoundForListener(input -> {
             Log.i(TAG, "[CHAT] NO Reply found for user message: " + input.getText());
         });
-
-
         return chat;
     }
 
@@ -422,6 +482,21 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     public void hideSoftKeyboard(View view) {
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    private void hideTextInput() {
+        runOnUiThread(() -> {
+            constraintLayoutBottom.setMaxHeight(0);
+        });
+    }
+
+    private void showTextInput() {
+        runOnUiThread(() -> {
+            ConstraintLayout.LayoutParams layoutParams = (ConstraintLayout.LayoutParams) constraintLayoutBottom.getLayoutParams();
+            layoutParams.height = 150;
+            constraintLayoutBottom.setLayoutParams(layoutParams);
+            constraintLayoutBottom.setMaxHeight(150);
+        });
     }
 
 
