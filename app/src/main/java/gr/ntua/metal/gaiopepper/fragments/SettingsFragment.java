@@ -7,7 +7,6 @@ import android.util.Log;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
-import gr.ntua.metal.gaiopepper.AutonomousAbilitiesController;
 import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.activities.SettingsActivity;
 

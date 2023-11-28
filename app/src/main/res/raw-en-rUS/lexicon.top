@@ -1,0 +1,188 @@
+topic: ~lexicon()
+
+#==================================================================#
+##### Voice tweaking #####
+concept:(neutral) \style=neutral\ \rspd=100\ \vct=110\
+concept:(neutral_slow) \style=neutral\ \vct=105\ \rspd=100\
+concept:(joyful) \style=joyful\ \rspd=90\ \vct=95\
+concept:(didactic) \style=didactic\ \rspd=105\ \vct=110\
+#==================================================================#
+
+concept:(yes) [
+    e:Dialog/Yes
+    yes
+    sure
+    "{yes} I would"
+    "tell me"
+    "for sure"
+    "of course"
+    ΟΚ
+]
+
+concept:(no) [
+    e:Dialog/No
+    no
+    nope
+    "not a chance"
+    "{no} I don't want {to}"
+]
+
+concept:(p200) \pau=200\
+concept:(p500) \pau=500\
+concept:(p1000) \pau=1000\
+concept:(p1500) \pau=1500\
+concept:(p2000) \pau=2000\
+concept:(p2500) \pau=2500\
+concept:(p3000) \pau=3000\
+
+concept:(greetings) [
+    "hi"
+    "hello"
+    "howdy"
+    "good [morning evening]"
+]
+
+concept:(how_are_you) [
+    "how [
+        "are you {doing} {today}"
+        "have you been"
+    ]"
+    "[
+        "are you"
+        "is everything"
+    ] [ok good alright]"
+]
+
+concept:(good) [good fine nice OK]
+
+concept:(bad) [
+    meh
+    Awful
+    "[
+        "I am"
+        "I'm"
+    ] [
+        bored
+        "not [good OK]"
+    ]"
+]
+
+concept:(great) [great awesome fabulous]
+
+concept:(whats_your_name) ["What is your name" "What's your name"]
+
+concept:(my_name_is) ["they call me" "my name {is}"]
+
+concept:(name) [George
+                John
+                Mary
+                Maria
+                Leeberyy
+                Nick
+                Paris]
+
+concept:(color) "{[dark light]} [red yellow green blue white black purple pink indigo gray lime brown]"
+
+concept:(its)  ["is it" "it is" "its" "it's"]
+
+concept:(mineral) [mineral ore rock metal]
+
+concept:(used_in) {~tell_me} [
+    "[where how] [
+        "["is $focusedMineral" ~its] usefull"
+        "does [$focusedMineral it] find usage"
+        "do [we you] use [$focusedMineral it]"
+    ]"
+    "[what how] [is are] ~its [uses used]"
+    "[$focusedMineral its it's] uses"
+]
+
+concept:(where_to_find) {~tell_me} {from} [
+    "[where how] [
+        "do [we you] [extract mine find] {[it $focusedMineral]}"
+        "~its [extracted mined found]"
+    ] {from}"
+    "[
+        "$focusedMineral {'s}"
+        "its"
+        "it's"
+    ] [
+        "extraction"
+        "mining"
+        "acquisition"
+    ] [process procedure]"
+]
+
+concept:(i_want) I{'d} [
+    "{just} want"
+    "{would} like"
+]
+
+concept:(tell_me) [
+    "{please} ["talk to" tell] me"
+    "~i_want [
+        "to [know learn]"
+        "you to tell me"
+    ] {more} {about}"
+]
+
+concept:(talk) [
+    "make conversation"
+    "converse"
+    "[
+        "speak {to}"
+        "talk {to}"
+        "tell"
+    ] {[us me]}"
+]
+
+concept:(change_sub) {[OK nice]} {Pepper} {[
+    "[
+        "I'm"
+        "I am"
+    ] sorry"
+    "excuse me"
+]} {but} "~i_want to [
+    "change {the} subject {of [the our] [dialog conversation]}"
+    "~talk about [
+        "another [~mineral subject]"
+        "something else"
+    ]"
+]"
+
+concept:(would_you_like_to_know_about_me) ["["Maybe you would" "Would you"] like to know more about me" "Do you want me to [tell "talk to"] you about [myself me]"]
+
+concept:(conversation) [
+    "What would you like to talk about"
+]?
+
+concept:(close) {OK} {Pepper} you can {["rest" "close" "end the discussion"] {now}}
+#####################################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+concept:(bravo) ^rand["Μπράβο!" "Μπραβο. πολυ σωστα!" "Πολυ σωστα!" "Συγχαρητηρια!" "Σωστα! Μπραβο σου!"]
+
+concept:(wrong) ^rand[Λαθος Οχι]
+
+concept:(try_again) ^rand["Δοκίμασε αλλη μια φορα" "Δοκίμασε ξανα" "ξαναπροσπάθησε"]
+
+
+
+concept:(menu) ^rand["Για πιό μετάλευμα η ορυκτό ~do_you_want να μιλήσουμε?" ~conversation]
+
+
+
+

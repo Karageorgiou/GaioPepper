@@ -13,6 +13,7 @@ dependencyResolutionManagement {
         maven {
             url 'https://android.aldebaran.com/sdk/maven'
         }
+
     }
 }
 rootProject.name = "GaioPepper"

@@ -1,19 +1,21 @@
 package gr.ntua.metal.gaiopepper.adapters;
 
+import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutRobot;
+import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutRobotImage;
+import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutUser;
+
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.List;
+
 import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.holders.MessageViewHolder;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
-
-import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutRobotImage;
-import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutUser;
-import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutRobot;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageViewHolder> {
     private static final String TAG = "Message Adapter";
