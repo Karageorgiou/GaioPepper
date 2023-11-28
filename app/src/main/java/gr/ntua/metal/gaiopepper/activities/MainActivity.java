@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -19,6 +20,7 @@ import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.aldebaran.qi.Function;
 import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.QiSDK;
@@ -48,6 +50,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
 import gr.ntua.metal.gaiopepper.AutonomousAbilitiesController;
 import gr.ntua.metal.gaiopepper.R;
@@ -58,12 +61,16 @@ import gr.ntua.metal.gaiopepper.models.MessageItem;
 public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks, View.OnClickListener {
     private static final String TAG = "Main Activity";
 
+    public static String sDefSystemLanguage;
     InputMethodManager imm;
 
 
     private QiContext qiContext;
     private final Locale localeGR = new Locale(Language.GREEK, Region.GREECE);
     private final Locale localeEN = new Locale(Language.ENGLISH, Region.UNITED_STATES);
+
+    private List<Topic> topicListGR;
+    private List<Topic> topicListEN;
 
     private SpeechEngine speechEngine;
 
@@ -84,7 +91,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
 
     /**
-     * Override Methods
+     * _____________________________________________________________________________
+     * <h1>Override Methods</h1>
      */
 
     @Override
@@ -114,6 +122,18 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         recyclerView.setAdapter(messageAdapter);
 
 
+
+        /*for (java.util.Locale locale : java.util.Locale.getAvailableLocales()) {
+            System.out.println("HELLO " + locale.getDisplayLanguage());
+        }*/
+
+        sDefSystemLanguage = java.util.Locale.getDefault().getLanguage();
+        System.out.println("HELLO " + sDefSystemLanguage);
+
+
+
+
+
     }
 
     @Override
@@ -130,42 +150,21 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         makeSpeechEngine(qiContext);
 
-        /*List<Topic> topicList =new LinkedList<Topic>();
-        Future<Topic> futureTopicLex = TopicBuilder
-                .with(qiContext)
-                .withResource(R.raw.lexicon)
-                //.withAsset("app/src/main/res/raw-en-rUS/lexicon.top")
-                .buildAsync();
-        futureTopicLex.thenConsume(future -> {
-            if (future.hasError()) {
-                Log.e(TAG,"[TopicBuilder] Error: " + future.getErrorMessage());
-            } else if (future.isCancelled()) {
-                Log.e(TAG,"[TopicBuilder] Cancelled: ");
-            } else if (future.isDone()) {
-                Log.i(TAG,"[TopicBuilder] Done: ");
-            } else if (future.isSuccess()) {
-                Log.i(TAG,"[TopicBuilder] Success: ");
-                topicList.add(future.get());
-            }
-        });*/
+        topicListGR = buildTopicList(new LinkedList<Integer>(
+                Arrays.asList(
+                        R.raw.lexicon_gr,
+                        R.raw.introduction_gr,
+                        R.raw.bauxite_gr
+                )
+        ));
 
-
-        chat = buildChat(
-                buildQiChatbot(
-                        /*topicList*/
-                        buildTopicList(
-                                new LinkedList<Integer>(
-                                        Arrays.asList(
-                                            R.raw.lexicon,
-                                            R.raw.introduction,
-                                            R.raw.bauxite
-                                        )
-                                )
-                        ),
-                        localeEN
-                ),
-                localeEN
-        );
+        topicListEN = buildTopicList(new LinkedList<Integer>(
+                Arrays.asList(
+                        R.raw.lexicon_en,
+                        R.raw.introduction_en,
+                        R.raw.bauxite_en
+                )
+        ));
 
         applyPreferences(qiContext);
 
@@ -214,7 +213,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
 
     /**
-     * Base Methods
+     * _____________________________________________________________________________
+     *
+     * <h1>Base Methods</h1>
      */
 
     private void applyPreferences(QiContext qiContext) {
@@ -222,10 +223,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         boolean backgroundMovement = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.BACKGROUND_MOVEMENT), true);
         boolean basicAwareness = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.BASIC_AWARENESS), true);
         String conversationMode = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_MODE), "NONE");
+        String conversationLanguage = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_LANGUAGE), "GR");
 
         AutonomousAbilitiesController.buildHolders(qiContext);
-
-        Log.d(TAG, "[applyPreferences] autonomousBlinking: " + autonomousBlinking);
 
         if (autonomousBlinking) {
             AutonomousAbilitiesController.startAutonomousBlinking();
@@ -243,7 +243,20 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             AutonomousAbilitiesController.stopBasicAwareness(qiContext);
         }
 
-        Log.d(TAG, "[applyPreferences] conversationMode: " + conversationMode);
+        if (Objects.equals(conversationLanguage, getString(R.string.GREEK))) {
+            try {
+                chatbot = buildQiChatbot(topicListGR, localeGR);
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        } else if(Objects.equals(conversationLanguage, getString(R.string.ENGLISH))) {
+            try {
+                chatbot = buildQiChatbot(topicListEN, localeEN);
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
         if (Objects.equals(conversationMode, getString(R.string.NONE))) {
             if (chatFuture != null) {
                 if (!chatFuture.isSuccess() || !chatFuture.isCancelled() || !chatFuture.isDone()) {
@@ -252,7 +265,13 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             }
         } else if (Objects.equals(conversationMode, getString(R.string.ORAL_CONVERSATION))) {
             hideTextInput();
-            runChat(chat);
+            if (Objects.equals(conversationLanguage, getString(R.string.GREEK))) {
+                chat = buildChat(chatbot, localeGR);
+                runChat(chat);
+            } else if(Objects.equals(conversationLanguage, getString(R.string.ENGLISH))) {
+                chat = buildChat(chatbot, localeEN);
+                runChat(chat);
+            }
         } else if (Objects.equals(conversationMode, getString(R.string.WRITTEN_CONVERSATION))) {
             if (chatFuture != null) {
                 if (!chatFuture.isSuccess() || !chatFuture.isCancelled() || !chatFuture.isDone()) {
@@ -267,13 +286,14 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
 
     /**
-     * Conversation Methods
+     * _____________________________________________________________________________
+     * <h1>Conversation Methods</h1>
      */
 
-    private List<Topic> buildTopicList(List<Integer> topics) {
+    public List<Topic> buildTopicList(List<Integer> topics) {
         List<Topic> topicList;
         topicList = new LinkedList<Topic>();
-        for (int topicName:topics) {
+        for (int topicName : topics) {
             Topic topic = TopicBuilder
                     .with(qiContext)
                     .withResource(topicName)
@@ -284,50 +304,76 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     /**
-     * Returns a @see(QiChatbot) instance built with the specified parameters.
-     * The topicList attribute must be generated by @see buildTopicList method.
+     * Returns a <b>QiChatbot</b> instance built with the specified parameters.
+     * The topicList attribute must be generated by <b>buildTopicList</b> method.
      * The locale is already created as a global variable and can be found on top.
      *
-     * @param topicList   a topicList created by buildTopicList method
+     * @param topicList a topicList created by buildTopicList method
      * @param locale    Locale from package com.aldebaran.qi.sdk.object.locale
-     * @return     the newly built chatbot which runs the provided topics.
+     * @see com.aldebaran.qi.sdk.object.conversation.QiChatbot QiChatbot
+     * @see com.aldebaran.qi.sdk.object.locale.Locale Locale
      */
-    private QiChatbot buildQiChatbot(List<Topic> topicList, Locale locale) {
+    private QiChatbot buildQiChatbot(List<Topic> topicList, Locale locale) throws ExecutionException {
 
-        chatbot = QiChatbotBuilder
+        QiChatbot newChatbot;/* = QiChatbotBuilder
                 .with(qiContext)
                 .withTopics(topicList)
                 .withLocale(locale)
-                .build();
-        chatbot.addOnBookmarkReachedListener(bookmark -> {
-            Log.i(TAG, "Bookmark " + bookmark.getName() + " reached.");
-            boolean update = false;
-            switch (bookmark.getName()) {
-                case "BAUXITE":
-                    updateRecyclerView(LayoutRobotImage, R.drawable.red_bauxite_pissoliths);
-                    break;
-                case "PISOLITH":
-                    updateRecyclerView(LayoutRobotImage, R.drawable.white_bauxite);
-                    break;
-                case "ALUMINIUM":
-                    updateRecyclerView(LayoutRobotImage, R.drawable.aluminium);
-                    break;
-                default:
-                    break;
+                .build();*/
+
+        Future<QiChatbot> qiChatbotBuilderFuture = QiChatbotBuilder
+                .with(qiContext)
+                .withTopics(topicList)
+                .withLocale(locale)
+                .buildAsync();
+
+        newChatbot = qiChatbotBuilderFuture.thenCompose((Function<Future<QiChatbot>, Future<QiChatbot>>) value -> {
+            if (value.hasError()) {
+                Log.e(TAG, "[qiChatbotBuilder][ERROR]: " + value.getErrorMessage());
+                Toast.makeText(getApplicationContext(), value.getErrorMessage(), Toast.LENGTH_LONG).show();
+                return null;
+            } else {
+                return value;
             }
-        });
-        chatbot.addOnEndedListener(endReason -> {
-            Log.i(TAG, "Chatbot ended for reason: " + endReason);
-            chatFuture.requestCancellation();
-        });
-        chatbot.addOnAutonomousReactionChangedListener(autonomousReaction -> {
-            Log.d(TAG, "autonomousssss");
-            autonomousReaction.getChatbotReaction().runWith(speechEngine);
-        });
-        return chatbot;
+        }).get();
+
+        if (newChatbot != null) {
+            newChatbot.addOnBookmarkReachedListener(bookmark -> {
+                Log.i(TAG, "Bookmark " + bookmark.getName() + " reached.");
+                boolean update = false;
+                switch (bookmark.getName()) {
+                    case "BAUXITE":
+                        updateRecyclerView(LayoutRobotImage, R.drawable.red_bauxite_pissoliths);
+                        break;
+                    case "PISOLITH":
+                        updateRecyclerView(LayoutRobotImage, R.drawable.white_bauxite);
+                        break;
+                    case "ALUMINIUM":
+                        updateRecyclerView(LayoutRobotImage, R.drawable.aluminium);
+                        break;
+                    default:
+                        break;
+                }
+            });
+            newChatbot.addOnEndedListener(endReason -> {
+                Log.i(TAG, "Chatbot ended for reason: " + endReason);
+                chatFuture.requestCancellation();
+            });
+            newChatbot.addOnAutonomousReactionChangedListener(autonomousReaction -> {
+                Log.d(TAG, "autonomousssss");
+                autonomousReaction.getChatbotReaction().runWith(speechEngine);
+            });
+            return newChatbot;
+        } else {
+            return  null;
+        }
     }
 
     private Chat buildChat(QiChatbot chatbot, Locale locale) {
+        if (chatbot == null) {
+            Log.e(TAG, "[buildChat]: chatbot is null.");
+            return null;
+        }
         Chat chat = ChatBuilder
                 .with(qiContext)
                 .withChatbot(chatbot)
@@ -376,6 +422,10 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     private void runChat(Chat chat) {
+        if (chat == null) {
+            Log.e(TAG, "[runChat]: chat is null.");
+            return;
+        }
         chatFuture = chat.async().run();
         chatFuture.thenConsume(future -> {
             if (future.hasError()) {
@@ -426,7 +476,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
 
     /**
-     * UI Methods
+     * _____________________________________________________________________________
+     * <h1>UI Methods</h1>
      */
 
     private void findViews() {

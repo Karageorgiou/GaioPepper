@@ -129,6 +129,8 @@ concept:(tell_me) [
 concept:(talk) [
     "make conversation"
     "converse"
+    "hear"
+    "know"
     "[
         "speak {to}"
         "talk {to}"

@@ -7,4 +7,7 @@
     <string name="WRITTEN_CONVERSATION">WRITTEN</string>
     <string name="NONE">NONE</string>
     <string name="CONVERSATION_MODE">conversation_mode</string>
+    <string name="CONVERSATION_LANGUAGE">conversation_language</string>
+    <string name="GREEK">GR</string>
+    <string name="ENGLISH">EN</string>
 </resources>

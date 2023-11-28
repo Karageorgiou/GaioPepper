@@ -24,11 +24,23 @@
     <PreferenceCategory app:title="Conversation">
         <ListPreference
             android:defaultValue="ORAL"
-            app:entries="@array/conversation_choices_entries"
-            app:entryValues="@array/conversation_choices_values"
+            app:entries="@array/conversation_mode_entries"
+            app:entryValues="@array/conversation_mode_values"
             app:key="@string/CONVERSATION_MODE"
-            app:title="Select Conversation Mode"
-            app:useSimpleSummaryProvider="true" />
+            app:summary="Choose between Oral and Written conversation."
+            app:title="Conversation Mode"
+            app:useSimpleSummaryProvider="false" />
+
+        <ListPreference
+            android:defaultValue="GR"
+            app:entries="@array/conversation_language_entries"
+            app:entryValues="@array/conversation_language_values"
+            app:key="@string/CONVERSATION_LANGUAGE"
+            app:summary="Choose the language that the robot will be speaking."
+            app:title="Conversation Language"
+            app:useSimpleSummaryProvider="false" />
+
+
     </PreferenceCategory>
 
 
@@ -38,6 +50,17 @@
             app:key="volume"
             app:showSeekBarValue="true"
             app:title="Volume" />
+
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            app:key="microphone"
+            app:summaryOff="Ανενεργό"
+            app:summaryOn="Ενεργό"
+            app:title="Robot Listening" />
+    </PreferenceCategory>
+
+
+    <PreferenceCategory app:title="Language">
 
         <SwitchPreferenceCompat
             android:defaultValue="true"
