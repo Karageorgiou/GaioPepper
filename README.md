@@ -35,12 +35,12 @@ Choose Plugins section from the sidebar.
 Find and install PepperSDK.
 
 ### Step 5: Install Additional libraries
-Inside Android studio go to Tools > PepperSDK > Emulator.
-It will prompt you to install packages. Install everything from API 7.
-Close the emulator.
+- Inside Android studio go to Tools > PepperSDK > Emulator. It will prompt you to install packages. 
+- Install everything from API 7.
+- Close the emulator.
 
 ### Step 6: Install Quick Emulator & Kernel-based Virtual Machine
-- Install wemu-kvl:
+- Install qemu-kvl:
 
 ```
 sudo apt install qemu-kvm
