@@ -9,25 +9,25 @@ u:(What time is it?) ^currentTime
 #pronunciation:(γεια) [για]
 
 u:(~greetings {Pepper})
-^rand ~greetings ^stayInScope
+^rand ~greetings ^stayInScope %GREETINGS
     u1:(~whats_your_name)
-    ^rand ~my_name_is ~p200 Pepper. ~p500 And you? ^rand ~whats_your_name ? ^stayInScope
+    ^rand ~my_name_is ~p200 Pepper. ~p500 And you? ^rand ~whats_your_name ? ^stayInScope %GREETINGS.1
         u2: ({~my_name_is} _~name)
-        ^rand[Nice "It is great" "It is a pleasure"] to meet you ~p200 $1 $name=$1 ^stayInScope
+        ^rand[Nice "It is great" "It is a pleasure"] to meet you ~p200 $1 $name=$1 ^stayInScope %GREETINGS.1.1
     u1:(~how_are_you)
-    ^rand[~great "Beautiful day. Isn't it?" "["Couldn't" "{I} could not"] be better"]. And ~p200 {how about} you? ^stayInScope
+    ^rand[~great "Beautiful day. Isn't it?" "["Couldn't" "{I} could not"] be better"]. And ~p200 {how about} you? ^stayInScope %GREETINGS.2
         u2:(~good)
-        I am glad to hear you are ok. ~p200 Would you like to talk about minerals? ^stayInScope
+        I am glad to hear you are ok. ~p200 Would you like to talk about minerals? ^stayInScope %GREETINGS.2.1
             u3:(~yes)
-            ~great . ^goto(MINERALS)
+            ~great . %GREETINGS.2.1.1 ^goto(MINERALS)
             u3:(~no)
-            Pity, I know so much about them. ~p1000 ~would_you_like_to_know_about_me ?  ^stayInScope
+            Pity, I know so much about them. ~p1000 ~would_you_like_to_know_about_me ?  ^stayInScope %GREETINGS.2.1.2
                 u4:(~yes)
-                ~great . ^enableThenGoto(ROBOT_INFO)
+                ~great . %GREETINGS.2.1.2.1 ^enableThenGoto(ROBOT_INFO)
                 u4:(~no)
-                OK.
+                OK. %GREETINGS.2.1.2.2
         u2:(~bad)
-        Don't worry, ^rand["I will cheer you up" "I have many interesting topics to discuss"] ^enableThenGoto(LEARN)
+        Don't worry, ^rand["I will cheer you up" "I have many interesting topics to discuss"] %GREETINGS.2.2 ^enableThenGoto(LEARN)
 
 
 proposal: %INTRO  [Greetings Hello]. I am Pepper. ~p500 Welcome to Mineralogical Museum, ~p200 Gaio-Orama.

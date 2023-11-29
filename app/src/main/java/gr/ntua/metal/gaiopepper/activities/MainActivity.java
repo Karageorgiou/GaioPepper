@@ -7,11 +7,13 @@ import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutUserImage;
 
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatDelegate;
@@ -31,6 +33,9 @@ import com.aldebaran.qi.sdk.builder.TopicBuilder;
 import com.aldebaran.qi.sdk.design.activity.RobotActivity;
 import com.aldebaran.qi.sdk.design.activity.conversationstatus.SpeechBarDisplayPosition;
 import com.aldebaran.qi.sdk.design.activity.conversationstatus.SpeechBarDisplayStrategy;
+import com.aldebaran.qi.sdk.object.conversation.AutonomousReactionImportance;
+import com.aldebaran.qi.sdk.object.conversation.AutonomousReactionValidity;
+import com.aldebaran.qi.sdk.object.conversation.Bookmark;
 import com.aldebaran.qi.sdk.object.conversation.Chat;
 import com.aldebaran.qi.sdk.object.conversation.ChatbotReaction;
 import com.aldebaran.qi.sdk.object.conversation.Phrase;
@@ -53,6 +58,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 import gr.ntua.metal.gaiopepper.AutonomousAbilitiesController;
+import gr.ntua.metal.gaiopepper.ImageManager;
 import gr.ntua.metal.gaiopepper.R;
 
 import gr.ntua.metal.gaiopepper.adapters.MessageAdapter;
@@ -62,7 +68,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private static final String TAG = "Main Activity";
 
     public static String sDefSystemLanguage;
-    InputMethodManager imm;
+
+    InputMethodManager inputMethodManager;
+    AudioManager audioManager;
 
 
     private QiContext qiContext;
@@ -80,6 +88,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private TextInputEditText textInputEditText;
     private RecyclerView recyclerView;
     private ImageButton buttonSend;
+    private ImageView expandedImageView;
     private ConstraintLayout constraintLayoutBottom;
 
     private QiChatbot chatbot;
@@ -88,6 +97,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     private List<MessageItem> messageItemList;
     private MessageAdapter messageAdapter;
+
+    private Bookmark lastBookmark = null;
+    private int lastImage = 0;
+    private String lastMessage = "";
+    private long lastImageUpdate = 100000;
+    private long lastMessageUpdate = 100000;
 
 
     /**
@@ -103,7 +118,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         QiSDK.register(this, this);
         this.setContentView(R.layout.activity_main);
 
-        imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
 
         /// Set Default Variables
@@ -111,7 +127,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         setSpeechBarDisplayPosition(SpeechBarDisplayPosition.TOP);
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
+
         findViews();
+        addListeners();
+
+        ImageManager.setExpandedImageView(expandedImageView);
+
 
         messageItemList = new ArrayList<MessageItem>();
         messageAdapter = new MessageAdapter(getApplicationContext(), messageItemList);
@@ -123,15 +144,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
 
 
-        /*for (java.util.Locale locale : java.util.Locale.getAvailableLocales()) {
-            System.out.println("HELLO " + locale.getDisplayLanguage());
-        }*/
-
         sDefSystemLanguage = java.util.Locale.getDefault().getLanguage();
         System.out.println("HELLO " + sDefSystemLanguage);
 
-
-
+       /* SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+        editor.putString(getString(R.string.CONVERSATION_LANGUAGE), "EN");
+*/
 
 
     }
@@ -147,8 +165,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     public void onRobotFocusGained(QiContext qiContext) {
         Log.i(TAG, "onRobotFocusGained");
         this.qiContext = qiContext;
-
-        makeSpeechEngine(qiContext);
 
         topicListGR = buildTopicList(new LinkedList<Integer>(
                 Arrays.asList(
@@ -166,9 +182,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 )
         ));
 
+        makeSpeechEngine(qiContext);
         applyPreferences(qiContext);
-
-        addListeners();
 
 
     }
@@ -176,6 +191,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     @Override
     public void onRobotFocusLost() {
         Log.i(TAG, "onRobotFocusLost");
+        chatbot = null;
         this.qiContext = null;
         removeListeners();
     }
@@ -223,8 +239,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         boolean backgroundMovement = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.BACKGROUND_MOVEMENT), true);
         boolean basicAwareness = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.BASIC_AWARENESS), true);
         String conversationMode = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_MODE), "NONE");
-        String conversationLanguage = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_LANGUAGE), "GR");
-
+        String conversationLanguage = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_LANGUAGE), "EN");
+        Log.d(TAG, "[applyPreferences] conversationLanguage: " + conversationLanguage);
         AutonomousAbilitiesController.buildHolders(qiContext);
 
         if (autonomousBlinking) {
@@ -249,7 +265,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             } catch (ExecutionException e) {
                 e.printStackTrace();
             }
-        } else if(Objects.equals(conversationLanguage, getString(R.string.ENGLISH))) {
+        } else if (Objects.equals(conversationLanguage, getString(R.string.ENGLISH))) {
             try {
                 chatbot = buildQiChatbot(topicListEN, localeEN);
             } catch (ExecutionException e) {
@@ -268,7 +284,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             if (Objects.equals(conversationLanguage, getString(R.string.GREEK))) {
                 chat = buildChat(chatbot, localeGR);
                 runChat(chat);
-            } else if(Objects.equals(conversationLanguage, getString(R.string.ENGLISH))) {
+            } else if (Objects.equals(conversationLanguage, getString(R.string.ENGLISH))) {
                 chat = buildChat(chatbot, localeEN);
                 runChat(chat);
             }
@@ -280,7 +296,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             }
             showTextInput();
         }
-
 
     }
 
@@ -339,8 +354,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         if (newChatbot != null) {
             newChatbot.addOnBookmarkReachedListener(bookmark -> {
-                Log.i(TAG, "Bookmark " + bookmark.getName() + " reached.");
-                boolean update = false;
+                Log.i(TAG, "[CHATBOT] Bookmark " + bookmark.getName() + " reached.");
                 switch (bookmark.getName()) {
                     case "BAUXITE":
                         updateRecyclerView(LayoutRobotImage, R.drawable.red_bauxite_pissoliths);
@@ -354,18 +368,23 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                     default:
                         break;
                 }
+                lastBookmark = bookmark;
             });
             newChatbot.addOnEndedListener(endReason -> {
                 Log.i(TAG, "Chatbot ended for reason: " + endReason);
                 chatFuture.requestCancellation();
             });
             newChatbot.addOnAutonomousReactionChangedListener(autonomousReaction -> {
-                Log.d(TAG, "autonomousssss");
-                autonomousReaction.getChatbotReaction().runWith(speechEngine);
+                ChatbotReaction chatbotReaction = autonomousReaction.getChatbotReaction();
+                Log.d(TAG, "[autonomousReaction]: " + chatbotReaction.toString());
+                chatbotReaction.runWith(speechEngine);
             });
+            if (lastBookmark != null) {
+                newChatbot.goToBookmark(lastBookmark, AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
+            }
             return newChatbot;
         } else {
-            return  null;
+            return null;
         }
     }
 
@@ -406,7 +425,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             }
         });
         chat.addOnNormalReplyFoundForListener(input -> {
-            Log.i(TAG, "[CHAT] Reply found for user message: " + input.getText());
+            Log.i(TAG, "[CHAT] User message: " + input.getText());
         });
         chat.addOnNoPhraseRecognizedListener(() -> {
             Log.i(TAG, "[CHAT] No phrase recognized.");
@@ -516,6 +535,11 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         } catch (Exception e) {
             e.printStackTrace();
         }
+        try {
+            expandedImageView = findViewById(R.id.expanded_image);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void addListeners() {
@@ -538,6 +562,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     private void updateRecyclerView(int messageLayout, int image) {
+        if (purgeDuplicateMessages(image)) {
+            return;
+        }
         switch (messageLayout) {
             case LayoutRobotImage:
                 messageItemList.add(new MessageItem(messageLayout, R.drawable.ic_pepper_w, image));
@@ -553,7 +580,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     private void updateRecyclerView(int messageLayout, String message) {
-        Log.d(TAG, "msgLayout: " + messageLayout + " message: " + message);
+        if (purgeDuplicateMessages(message)) {
+            return;
+        }
         switch (messageLayout) {
             case LayoutRobot:
                 messageItemList.add(new MessageItem(messageLayout, R.drawable.ic_pepper_w, message));
@@ -568,14 +597,32 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         });
     }
 
+    private boolean purgeDuplicateMessages(int image) {
+        if (image == lastImage && Math.abs(lastImageUpdate - System.currentTimeMillis()) < 1500) {
+            return true;
+        }
+        lastImage = image;
+        lastImageUpdate = System.currentTimeMillis();
+        return false;
+    }
+
+    private boolean purgeDuplicateMessages(String message) {
+        if (message == lastMessage && Math.abs(lastMessageUpdate - System.currentTimeMillis()) < 1500) {
+            return true;
+        }
+        lastMessage = message;
+        lastMessageUpdate = System.currentTimeMillis();
+        return false;
+    }
+
     public void showSoftKeyboard(View view) {
         if (view.requestFocus()) {
-            imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+            inputMethodManager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
         }
     }
 
     public void hideSoftKeyboard(View view) {
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     private void hideTextInput() {

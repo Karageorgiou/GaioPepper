@@ -32,7 +32,7 @@
             app:useSimpleSummaryProvider="false" />
 
         <ListPreference
-            android:defaultValue="GR"
+            android:defaultValue="EN"
             app:entries="@array/conversation_language_entries"
             app:entryValues="@array/conversation_language_values"
             app:key="@string/CONVERSATION_LANGUAGE"
@@ -58,16 +58,4 @@
             app:summaryOn="Ενεργό"
             app:title="Robot Listening" />
     </PreferenceCategory>
-
-
-    <PreferenceCategory app:title="Language">
-
-        <SwitchPreferenceCompat
-            android:defaultValue="true"
-            app:key="microphone"
-            app:summaryOff="Ανενεργό"
-            app:summaryOn="Ενεργό"
-            app:title="Robot Listening" />
-    </PreferenceCategory>
-
 </PreferenceScreen>
