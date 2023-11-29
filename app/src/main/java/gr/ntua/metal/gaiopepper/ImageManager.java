@@ -1,15 +1,19 @@
 package gr.ntua.metal.gaiopepper;
 
 
+import android.os.Handler;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 
 public class ImageManager {
     private static ImageView expandedImageView;
+    private static RelativeLayout expandedImageLayer;
 
-    public static void setExpandedImageView(ImageView imageView) {
+    public static void setExpandedImageView(ImageView imageView, RelativeLayout imageLayer) {
         expandedImageView = imageView;
+        expandedImageLayer = imageLayer;
         expandedImageView.setOnClickListener(view -> {
             hideImage();
         });
@@ -25,11 +29,19 @@ public class ImageManager {
     }
 
     public static void showImage() {
-        expandedImageView.setVisibility(View.VISIBLE);
+        expandedImageLayer.setVisibility(View.VISIBLE);
+    }
+
+    public static void showImageForSeconds(long seconds) {
+        showImage();
+        Handler handler = new Handler();
+        handler.postDelayed(() -> {
+            hideImage();
+        }, seconds * 1000);
     }
 
     public static void hideImage() {
-        expandedImageView.setVisibility(View.INVISIBLE);
+        expandedImageLayer.setVisibility(View.INVISIBLE);
     }
 
 

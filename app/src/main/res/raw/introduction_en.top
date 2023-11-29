@@ -15,7 +15,7 @@ u:(~greetings {Pepper})
         u2: ({~my_name_is} _~name)
         ^rand[Nice "It is great" "It is a pleasure"] to meet you ~p200 $1 $name=$1 ^stayInScope %GREETINGS.1.1
     u1:(~how_are_you)
-    ^rand[~great "Beautiful day. Isn't it?" "["Couldn't" "{I} could not"] be better"]. And ~p200 {how about} you? ^stayInScope %GREETINGS.2
+    ^rand[~great "Beautiful day. Isn't it?" "["Couldn't" "{I} could not"] be better"]. And ~p200 {"how about"} you? ^stayInScope %GREETINGS.2
         u2:(~good)
         I am glad to hear you are ok. ~p200 Would you like to talk about minerals? ^stayInScope %GREETINGS.2.1
             u3:(~yes)
@@ -36,17 +36,17 @@ proposal: %INTRO  [Greetings Hello]. I am Pepper. ~p500 Welcome to Mineralogical
 
 
 proposal: %LEARN I have studied various ["minerals and ores" "ores and minerals"]. ~p1000 ["Do you want" "Would you like"] to know about them?
-    u1:(~yes) ^enableThenGoto (MINERALS)
-    u1:(~no)  OK. Then ~would_you_like_to_know_about_me ? ^stayInScope
-        u2:(~yes)  Great I will tell you about byself. ^goto (ROBOT_INFO)
-        u2:(~no)  Well. ~p1000 I can't talk about anything else at the moment. I am sorry. ~p500 Ask me about a mineral or about me, until I expand my knowledge base.
+    u1:(~yes) %LEARN.1 ^enableThenGoto (MINERALS)
+    u1:(~no)  OK. Then ~would_you_like_to_know_about_me ? ^stayInScope %LEARN.2
+        u2:(~yes)  Great I will tell you about byself. %LEARN.2.1 ^goto (ROBOT_INFO)
+        u2:(~no)  Well. ~p1000 I can't talk about anything else at the moment. I am sorry. ~p500 Ask me about a mineral or about me, until I expand my knowledge base. %LEARN.2.2
 
 
 
 
 
 proposal: %MINERALS ~p500 ^rand ~conversation ^enable(MINERALS)
-    u:({~i_want to} ~talk about bauxite) ^gotoInTopic(BAUXITE,bauxite)
+    u:({~i_want to} {~talk} {about} bauxite) ^gotoInTopic(BAUXITE,bauxite)
     #u:(~talk_about Γύψο) ^enableThenGoto (GYPSUM)
     #u:(~talk_about Θείο) ^enableThenGoto (SULFUR)
     #u:(~talk_about Κορούνδιο ) ^enableThenGoto(CORUNDIUM_1)

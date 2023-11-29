@@ -83,13 +83,13 @@ concept:(name) [George
 
 concept:(color) "{[dark light]} [red yellow green blue white black purple pink indigo gray lime brown]"
 
-concept:(its)  ["is it" "it is" "its" "it's"]
+concept:(its)  ["is it" "it is" "its" "it's" "is" "it"]
 
 concept:(mineral) [mineral ore rock metal]
 
 concept:(used_in) {~tell_me} [
     "[where how] [
-        "["is $focusedMineral" ~its] usefull"
+        "["is $focusedMineral" ~its] usefull used"
         "does [$focusedMineral it] find usage"
         "do [we you] use [$focusedMineral it]"
     ]"
@@ -144,7 +144,7 @@ concept:(change_sub) {[OK nice]} {Pepper} {[
         "I am"
     ] sorry"
     "excuse me"
-]} {but} "~i_want to [
+]} {but} {"~i_want to"} "[
     "change {the} subject {of [the our] [dialog conversation]}"
     "~talk about [
         "another [~mineral subject]"

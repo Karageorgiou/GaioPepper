@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatDelegate;
@@ -89,6 +90,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private RecyclerView recyclerView;
     private ImageButton buttonSend;
     private ImageView expandedImageView;
+    private RelativeLayout expandedImageRelativeLayout;
     private ConstraintLayout constraintLayoutBottom;
 
     private QiChatbot chatbot;
@@ -131,7 +133,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         findViews();
         addListeners();
 
-        ImageManager.setExpandedImageView(expandedImageView);
+        ImageManager.setExpandedImageView(expandedImageView, expandedImageRelativeLayout);
 
 
         messageItemList = new ArrayList<MessageItem>();
@@ -141,7 +143,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         linearLayoutManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(messageAdapter);
-
 
 
         sDefSystemLanguage = java.util.Locale.getDefault().getLanguage();
@@ -362,7 +363,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                     case "PISOLITH":
                         updateRecyclerView(LayoutRobotImage, R.drawable.white_bauxite);
                         break;
-                    case "ALUMINIUM":
+                    case "BAUXITE.3":
                         updateRecyclerView(LayoutRobotImage, R.drawable.aluminium);
                         break;
                     default:
@@ -540,6 +541,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         } catch (Exception e) {
             e.printStackTrace();
         }
+        try {
+            expandedImageRelativeLayout = findViewById(R.id.expanded_image_layer);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void addListeners() {
@@ -576,6 +583,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         runOnUiThread(() -> {
             messageAdapter.notifyItemInserted(messageAdapter.getItemCount());
             recyclerView.scrollToPosition(messageItemList.size() - 1);
+            ImageManager.updateImage(image);
+            ImageManager.showImageForSeconds(4);
         });
     }
 
@@ -583,12 +592,13 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         if (purgeDuplicateMessages(message)) {
             return;
         }
+        String formattedMessage = formatMessage(message);
         switch (messageLayout) {
             case LayoutRobot:
-                messageItemList.add(new MessageItem(messageLayout, R.drawable.ic_pepper_w, message));
+                messageItemList.add(new MessageItem(messageLayout, R.drawable.ic_pepper_w, formattedMessage));
                 break;
             case LayoutUser:
-                messageItemList.add(new MessageItem(messageLayout, R.drawable.ic_user, message));
+                messageItemList.add(new MessageItem(messageLayout, R.drawable.ic_user, formattedMessage));
                 break;
         }
         runOnUiThread(() -> {
@@ -613,6 +623,17 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         lastMessage = message;
         lastMessageUpdate = System.currentTimeMillis();
         return false;
+    }
+
+    private String formatMessage(String message) {
+        String regex = "\\\\.*?\\\\";
+
+        // Replace characters between backslashes with an empty string
+        String formattedMessage = message.replaceAll(regex, "");
+        // Remove spaces and newline characters after the last character
+        formattedMessage = formattedMessage.replaceAll("\\s+$", "");
+
+        return formattedMessage;
     }
 
     public void showSoftKeyboard(View view) {

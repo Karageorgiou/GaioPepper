@@ -1,34 +1,34 @@
 topic: ~bauxite()
 
 proposal: %BAUXITE $focusedMineral=bauxite
-^rand[
-    "Bauxite is one of my favorites."
-    "Bauxite is a very usefull ore."
-    "Bauxite. ~p500 An interesting ore."
-    ] ~p1000 What would you like to know about it? ^enable(BAUXITE)
-        u1:(what {"kind of"} {~mineral} is it)
-        Bauxite is a combination of three different minerals,
-       ^rand ["diaspore, gibbsite and boehmite."
-        "του diaspore, boehmite and gibbsite."
-        "του boehmite, diaspore and gibbsite."
-        "του boehmite, gibbsite and diaspore."
-        "του gibbsite, boehmite and diaspore."
-        "του gibbsite, diaspore and boehmite."]
-        These there minerals make up the ore called, Bauxite. ^stayInScope
-        u1:(["what color ~its" "how [~its "does it look"]" "~its ~color"])
-        It presents a variety of colors, such as red, white, gray, yellow ~p200 and brown.
-        Would you ^rand[like want] to ^rand[know learn] about a physical feature that helps us identify the mineral? ^stayInScope
-            u2:(~yes) %PISOLITH
-               Bauxite often exhibits a pisolitic characteristics. ~p500 Pisoliths are the ores ^rand[with containing] spherical pea-sised grains. ^stayInScope
-            u2:(~no)
-            OK. ^rand["Ask me something else {then}." "Anything else you want to know?" "What sparked your interest {then}?"] ^stayInScope
-        u1:(~used_in) %ALUMINIUM
-        Bauxite is the raw material involved in the production of aluminum, otherwise known as aluminium.
-        Aluminum is a metal with a huge ^rand[variety range] of applications.
-        Such as in the space industry, transportation, construction, packaging and ~p500 household goods.^stayInScope
-        u1:(~where_to_find)
-        Bauxite can be found in Greece, Australia, Brazil, Jamaica, Guinea and Indonesia. ^stayInScope
-        u1:(~change_sub) ^enableThenGotoInTopic(MINERALS,introduction)
-        u1:(~close) ^enableThenGotoInTopic (GOODBYE,introduction)
+    ^rand[
+        "Bauxite is one of my favorites."
+        "Bauxite is a very usefull ore."
+        "Bauxite. ~p500 An interesting ore."
+        ] ~p1000 What would you like to know about it? ^enable(BAUXITE)
+            u1:(what {"kind of"} {~mineral} is it)
+                Bauxite is a combination of three different minerals,
+               ^rand ["diaspore, gibbsite and boehmite."
+                "του diaspore, boehmite and gibbsite."
+                "του boehmite, diaspore and gibbsite."
+                "του boehmite, gibbsite and diaspore."
+                "του gibbsite, boehmite and diaspore."
+                "του gibbsite, diaspore and boehmite."]
+                These there minerals make up the ore called, Bauxite. %BAUXITE.1 ^stayInScope
+            u1:(["what color ~its" "how ["~its {[look looking]}" "does it look"] {{~its} [~color color]}" "~its ~color"])
+                It presents a variety of colors, such as red, white, gray, yellow ~p200 and brown.
+                Would you ^rand[like want] to ^rand[know learn] about a physical feature that helps us identify the mineral? %BAUXITE.2 ^stayInScope
+                    u2:(~yes) %PISOLITH
+                        Bauxite often exhibits a pisolitic characteristics. ~p500 Pisoliths are the ores ^rand[with containing] spherical pea-sised grains. %BAUXITE.2.1 ^stayInScope
+                    u2:(~no)
+                        OK. ^rand["Ask me something else {then}." "Anything else you want to know?" "What sparked your interest {then}?"] %BAUXITE.2.2 ^stayInScope
+            u1:(~used_in)
+            Bauxite is the raw material involved in the production of aluminum, otherwise known as aluminium.
+            Aluminum is a metal with a huge ^rand[variety range] of applications.
+            Such as in the space industry, transportation, construction, packaging and ~p500 household goods. %BAUXITE.3 ^stayInScope
+            u1:(~where_to_find)
+            Bauxite can be found in Greece, Australia, Brazil, Jamaica, Guinea and Indonesia. %BAUXITE.4 ^stayInScope
+            u1:(~change_sub) ^enableThenGotoInTopic(MINERALS,introduction)
+            u1:(~close) ^enableThenGotoInTopic (GOODBYE,introduction)
 
 

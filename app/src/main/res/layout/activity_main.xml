@@ -6,13 +6,6 @@
     android:background="@color/cardview_dark_background"
     android:fitsSystemWindows="true">
 
-    <ImageView
-        android:id="@+id/expanded_image"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="invisible"
-        android:contentDescription="zoom_touch_close" />
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraint_top"
         android:layout_width="match_parent"
@@ -33,7 +26,6 @@
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraint_middle"
@@ -162,6 +154,25 @@
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <RelativeLayout
+        android:id="@+id/expanded_image_layer"
+        android:visibility="invisible"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <ImageView
+            android:id="@+id/expanded_image_background"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@color/black"
+            />
+        <ImageView
+            android:id="@+id/expanded_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/bauxite1"
+            android:contentDescription="zoom_touch_close" />
+    </RelativeLayout>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
