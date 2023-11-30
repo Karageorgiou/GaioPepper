@@ -2,69 +2,65 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="Autonomous Abilities">
+    <PreferenceCategory app:title="@string/AUTONOMOUS_ABILITIES_TITLE">
         <SwitchPreferenceCompat
             android:defaultValue="true"
-            app:key="@string/AUTONOMOUS_BLINKING"
-            app:summary="Blinks eye LEDs periodically. Color changes to pink when the robot sees a new user."
-            app:title="Autonomous Blinking" />
+            app:key="@string/AUTONOMOUS_BLINKING_KEY"
+            app:summary="@string/AUTONOMOUS_BLINKING_DESC"
+            app:title="@string/AYTONOMOUS_BLINKING_TITLE" />
         <SwitchPreferenceCompat
             android:defaultValue="true"
-            app:key="@string/BACKGROUND_MOVEMENT"
-            app:summary="Triggers slight movements of the upper body that the robot does autonomously."
-            app:title="Background Movement" />
+            app:key="@string/BACKGROUND_MOVEMENT_KEY"
+            app:summary="@string/BACKGROUND_MOVEMENT_DESC"
+            app:title="@string/BACKGROUND_MOVEMENT_TITLE" />
         <SwitchPreferenceCompat
             android:defaultValue="true"
-            app:key="@string/BASIC_AWARENESS"
-            app:summary="Follows the engaged person with his head and body. Reacts to hands, bumpers &amp; human detection"
-            app:title="Basic Awareness" />
+            app:key="@string/BASIC_AWARENESS_KEY"
+            app:summary="@string/BASIC_AWARENESS_DESC"
+            app:title="@string/BASIC_AWARENESS_TITLE" />
     </PreferenceCategory>
 
 
-    <PreferenceCategory app:title="Conversation">
+    <PreferenceCategory app:title="@string/CONVERSATION_TITLE">
         <ListPreference
             android:defaultValue="ORAL"
             app:entries="@array/conversation_mode_entries"
             app:entryValues="@array/conversation_mode_values"
-            app:key="@string/CONVERSATION_MODE"
-            app:summary="Choose between Oral and Written conversation."
-            app:title="Conversation Mode"
+            app:key="@string/CONVERSATION_MODE_KEY"
+            app:summary="@string/CONVERSATION_MODE_DESC"
+            app:title="@string/CONVERSATION_MODE_TITLE"
             app:useSimpleSummaryProvider="false" />
 
         <ListPreference
             android:defaultValue="EN"
             app:entries="@array/conversation_language_entries"
             app:entryValues="@array/conversation_language_values"
-            app:key="@string/CONVERSATION_LANGUAGE"
-            app:summary="Choose the language that the robot will be speaking."
-            app:title="Conversation Language"
+            app:key="@string/CONVERSATION_LANGUAGE_KEY"
+            app:summary="@string/CONVERSATION_LANGUAGE_DESC"
+            app:title="@string/CONVERSATION_LANGUAGE_TITLE"
             app:useSimpleSummaryProvider="false" />
-
-        <!--<SwitchPreferenceCompat
-            android:defaultValue="false"
-            android:key="@string/RESET_CHAT_KEY"
-            android:title="Reset chat state" />-->
 
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="@string/RESET_CHAT_KEY"
-            android:title="Reset chat state" />
+            android:title="@string/RESET_CHAT_TITLE"
+            app:summary="@string/RESET_CHAT_DESC" />
 
 
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="Audio">
+    <PreferenceCategory app:title="@string/AUDIO_TITLE">
         <SeekBarPreference
             android:defaultValue="50"
-            app:key="volume"
+            app:key="@string/VOLUME_KEY"
             app:showSeekBarValue="true"
-            app:title="Volume" />
+            app:title="@string/VOLUME_TITLE" />
 
         <SwitchPreferenceCompat
             android:defaultValue="true"
-            app:key="microphone"
-            app:summaryOff="Ανενεργό"
-            app:summaryOn="Ενεργό"
-            app:title="Robot Listening" />
+            app:key="@string/MICROPHONE_KEY"
+            app:summaryOff="@string/MICROPHONE_DESC_OFF"
+            app:summaryOn="@string/MICROPHONE_DESC_ON"
+            app:title="@string/MICROPHONE_TITLE" />
     </PreferenceCategory>
 </PreferenceScreen>

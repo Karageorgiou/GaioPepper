@@ -19,7 +19,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.preference.Preference;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -237,11 +236,11 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
      */
 
     private void applyPreferences(QiContext qiContext) {
-        boolean autonomousBlinking = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.AUTONOMOUS_BLINKING), true);
-        boolean backgroundMovement = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.BACKGROUND_MOVEMENT), true);
-        boolean basicAwareness = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.BASIC_AWARENESS), true);
-        String conversationMode = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_MODE), "NONE");
-        String conversationLanguage = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_LANGUAGE), "EN");
+        boolean autonomousBlinking = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.AUTONOMOUS_BLINKING_KEY), true);
+        boolean backgroundMovement = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.BACKGROUND_MOVEMENT_KEY), true);
+        boolean basicAwareness = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.BASIC_AWARENESS_KEY), true);
+        String conversationMode = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_MODE_KEY), "NONE");
+        String conversationLanguage = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_LANGUAGE_KEY), "EN");
         boolean resetChat = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.RESET_CHAT_KEY), false);
 
 
@@ -561,15 +560,18 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     private void removeListeners() {
-        chat.removeAllOnHeardListeners();
-        chat.removeAllOnFallbackReplyFoundForListeners();
-        chat.removeAllOnHearingChangedListeners();
-        chat.removeAllOnListeningChangedListeners();
-        chat.removeAllOnNoReplyFoundForListeners();
-        chat.removeAllOnNoPhraseRecognizedListeners();
-        chat.removeAllOnNormalReplyFoundForListeners();
-        chat.removeAllOnSayingChangedListeners();
-        chat.removeAllOnStartedListeners();
+        if (chat != null) {
+            chat.removeAllOnHeardListeners();
+            chat.removeAllOnFallbackReplyFoundForListeners();
+            chat.removeAllOnHearingChangedListeners();
+            chat.removeAllOnListeningChangedListeners();
+            chat.removeAllOnNoReplyFoundForListeners();
+            chat.removeAllOnNoPhraseRecognizedListeners();
+            chat.removeAllOnNormalReplyFoundForListeners();
+            chat.removeAllOnSayingChangedListeners();
+            chat.removeAllOnStartedListeners();
+        }
+
     }
 
     private void updateRecyclerView(int messageLayout, int image) {

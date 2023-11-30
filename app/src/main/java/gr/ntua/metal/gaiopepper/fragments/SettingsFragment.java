@@ -98,8 +98,8 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             }
         });
         prefResetChat.setOnPreferenceClickListener(preference -> {
-            alert.setTitle(getResources().getString(R.string.reset_chat_title));
-            alert.setMessage(R.string.reset_chat);
+            alert.setTitle(getResources().getString(R.string.reset_chat_dialog_title));
+            alert.setMessage(R.string.reset_chat_dialog);
             alert.setNegativeButton("No", (dialog, whichButton) -> {
                 Log.d(TAG, "[setNegativeButton]");
                 preference.callChangeListener(false);
@@ -125,11 +125,11 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
     private void findPreferences() {
         try {
-            prefAutonomousBlinking = findPreference("autonomous_blinking");
-            prefBackgroundMovement = findPreference("background_movement");
-            prefBasicAwareness = findPreference("basic_awareness");
-            prefVolume = findPreference("volume");
-            prefListening = findPreference("microphone");
+            prefAutonomousBlinking = findPreference(getString(R.string.AUTONOMOUS_BLINKING_KEY));
+            prefBackgroundMovement = findPreference(getString(R.string.BACKGROUND_MOVEMENT_KEY));
+            prefBasicAwareness = findPreference(getString(R.string.BASIC_AWARENESS_KEY));
+            prefVolume = findPreference(getString(R.string.VOLUME_KEY));
+            prefListening = findPreference(getString(R.string.MICROPHONE_KEY));
             prefResetChat = findPreference(getString(R.string.RESET_CHAT_KEY));
 
         } catch (Exception e) {

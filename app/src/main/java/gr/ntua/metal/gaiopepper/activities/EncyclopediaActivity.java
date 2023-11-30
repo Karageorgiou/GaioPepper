@@ -19,7 +19,7 @@ public class EncyclopediaActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setTitle("Εγκυκλοπαίδεια");
+            actionBar.setTitle(R.string.ENCYCLOPEDIA_TITLE);
 
         }
     }

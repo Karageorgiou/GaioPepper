@@ -121,8 +121,8 @@
                 android:focusable="true"
                 android:focusableInTouchMode="true"
                 android:gravity="center_vertical"
-                android:hint="Πληκτρολογήστε για γραπτή επικοινωνία με το Pepper..."
                 app:endIconMode="clear_text"
+                android:hint="@string/TEXT_INPUT_HINT"
                 app:hintTextColor="@color/logo_yellow"
                 app:shapeAppearance="@style/ThemeOverlay.Material3.AutoCompleteTextView.OutlinedBox">
 
