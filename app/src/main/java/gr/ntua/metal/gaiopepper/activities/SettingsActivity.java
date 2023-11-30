@@ -2,6 +2,7 @@ package gr.ntua.metal.gaiopepper.activities;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -47,4 +48,5 @@ public class SettingsActivity extends AppCompatActivity {
         onBackPressed();
         return true;
     }
+
 }

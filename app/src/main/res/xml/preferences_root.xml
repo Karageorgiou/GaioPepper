@@ -40,9 +40,18 @@
             app:title="Conversation Language"
             app:useSimpleSummaryProvider="false" />
 
+        <!--<SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="@string/RESET_CHAT_KEY"
+            android:title="Reset chat state" />-->
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="@string/RESET_CHAT_KEY"
+            android:title="Reset chat state" />
+
 
     </PreferenceCategory>
-
 
     <PreferenceCategory app:title="Audio">
         <SeekBarPreference

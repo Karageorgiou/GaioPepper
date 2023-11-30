@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.preference.Preference;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -241,9 +242,10 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         boolean basicAwareness = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.BASIC_AWARENESS), true);
         String conversationMode = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_MODE), "NONE");
         String conversationLanguage = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_LANGUAGE), "EN");
-        Log.d(TAG, "[applyPreferences] conversationLanguage: " + conversationLanguage);
-        AutonomousAbilitiesController.buildHolders(qiContext);
+        boolean resetChat = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.RESET_CHAT_KEY), false);
 
+
+        AutonomousAbilitiesController.buildHolders(qiContext);
         if (autonomousBlinking) {
             AutonomousAbilitiesController.startAutonomousBlinking();
         } else {
@@ -260,6 +262,10 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             AutonomousAbilitiesController.stopBasicAwareness(qiContext);
         }
 
+        if (resetChat) {
+            lastBookmark = null;
+        }
+
         if (Objects.equals(conversationLanguage, getString(R.string.GREEK))) {
             try {
                 chatbot = buildQiChatbot(topicListGR, localeGR);
@@ -273,7 +279,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 e.printStackTrace();
             }
         }
-
         if (Objects.equals(conversationMode, getString(R.string.NONE))) {
             if (chatFuture != null) {
                 if (!chatFuture.isSuccess() || !chatFuture.isCancelled() || !chatFuture.isDone()) {
@@ -297,7 +302,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             }
             showTextInput();
         }
-
     }
 
 

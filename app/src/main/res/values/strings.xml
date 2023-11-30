@@ -10,4 +10,7 @@
     <string name="CONVERSATION_LANGUAGE">conversation_language</string>
     <string name="GREEK">GR</string>
     <string name="ENGLISH">EN</string>
+    <string name="reset_chat"> The conversation will start from the beggining.</string>
+    <string name="reset_chat_title">Reset dialog state?</string>
+    <string name="RESET_CHAT_KEY">reset_chat_key</string>
 </resources>
