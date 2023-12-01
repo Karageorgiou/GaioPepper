@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:key="@string/PREFERENCE_SCREEN_KEY">
 
     <PreferenceCategory app:title="@string/AUTONOMOUS_ABILITIES_TITLE">
         <SwitchPreferenceCompat
@@ -42,11 +43,15 @@
 
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="@string/RESET_CHAT_KEY"
-            android:title="@string/RESET_CHAT_TITLE"
-            app:summary="@string/RESET_CHAT_DESC" />
+            android:key="@string/RESET_CHAT_STATE_KEY"
+            android:title="@string/RESET_CHAT_STATE_TITLE"
+            app:summary="@string/RESET_CHAT_STATE_DESC" />
 
-
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="@string/RESET_CHAT_LAYOUT_KEY"
+            android:title="@string/RESET_CHAT_LAYOUT_TITLE"
+            app:summary="@string/RESET_CHAT_LAYOUT_DESC" />
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/AUDIO_TITLE">
