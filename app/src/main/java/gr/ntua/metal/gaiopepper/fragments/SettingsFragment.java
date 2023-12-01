@@ -3,139 +3,218 @@ package gr.ntua.metal.gaiopepper.fragments;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
+import android.media.AudioAttributes;
+import android.media.AudioDeviceInfo;
+import android.media.AudioManager;
+import android.media.AudioMixerAttributes;
+import android.os.Build;
 import android.os.Bundle;
-import android.preference.RingtonePreference;
-import android.text.TextUtils;
 import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.preference.CheckBoxPreference;
-import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
-import androidx.preference.SwitchPreference;
+import androidx.preference.PreferenceScreen;
+import androidx.preference.SeekBarPreference;
+import androidx.preference.SwitchPreferenceCompat;
 
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.Executor;
 
 import gr.ntua.metal.gaiopepper.R;
+import gr.ntua.metal.gaiopepper.activities.MainActivity;
 import gr.ntua.metal.gaiopepper.activities.SettingsActivity;
 
-public class SettingsFragment extends PreferenceFragmentCompat {
+public class SettingsFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
     private static final String TAG = "Settings Activity";
 
-    Preference prefAutonomousBlinking;
-    Preference prefBackgroundMovement;
-    Preference prefBasicAwareness;
-    Preference prefVolume;
-    Preference prefListening;
-    CheckBoxPreference prefResetChat;
+    PreferenceScreen preferenceScreen;
+
+    SwitchPreferenceCompat prefAutonomousBlinking;
+    SwitchPreferenceCompat prefBackgroundMovement;
+    SwitchPreferenceCompat prefBasicAwareness;
+    SeekBarPreference prefVolume;
+    SwitchPreferenceCompat prefListening;
+    CheckBoxPreference prefResetChatState;
+    CheckBoxPreference prefResetChatLayout;
 
     AlertDialog.Builder alert;
+    AudioManager audioManager;
 
 
+    /**
+     * Called during {@link #onCreate(Bundle)} to supply the preferences for this fragment.
+     * Subclasses are expected to call {@link #setPreferenceScreen(PreferenceScreen)} either
+     * directly or via helper methods such as {@link #addPreferencesFromResource(int)}.
+     *
+     * @param savedInstanceState If the fragment is being re-created from a previous saved state,
+     *                           this is the state.
+     * @param rootKey            If non-null, this preference fragment should be rooted at the
+     *                           {@link PreferenceScreen} with this key.
+     */
     @Override
-    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+    public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
         setPreferencesFromResource(R.xml.preferences_root, rootKey);
 
         SettingsActivity settingsActivity = (SettingsActivity) getActivity();
         assert settingsActivity != null;
 
-        findPreferences();
-
         alert = new AlertDialog.Builder(this.getActivity());
 
+        audioManager = (AudioManager) getActivity().getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+        /*if (Build.VERSION.SDK_INT >= 34) {
+            audioManager.addOnPreferredMixerAttributesChangedListener(runnable -> {
+                runnable.run();
+            }, (audioAttributes, audioDeviceInfo, audioMixerAttributes) -> {
+                if(audioAttributes.getFlags() == AudioManager.STREAM_SYSTEM) {
+                    Log.d(TAG, "[getFlags] STREAM_SYSTEM");
+                }
+                if (audioAttributes.getVolumeControlStream() == AudioManager.STREAM_SYSTEM) {
+                    Log.d(TAG, "[getVolumeControlStream] STREAM_SYSTEM");
+                }
+            });
+        }*/
 
-        prefAutonomousBlinking.setOnPreferenceChangeListener((preference11, newValue) -> {
-            Log.i(TAG, "Preference Autonomous Blinking set to: " + newValue.toString());
-            if (newValue.equals(true)) {
-            } else if (newValue.equals(false)) {
+        findPreferences();
+        addListeners();
+
+    }
+
+    /**
+     * Called when a preference has been clicked.
+     *
+     * @param preference The preference that was clicked
+     * @return {@code true} if the click was handled
+     */
+    @Override
+    public boolean onPreferenceClick(@NonNull Preference preference) {
+        String preferenceKey = preference.getKey();
+        if (preferenceKey.equals(getString(R.string.RESET_CHAT_STATE_KEY))) {
+            if (!prefResetChatState.isChecked()) {
+                prefResetChatState.callChangeListener(false);
+            } else if (prefResetChatState.isChecked()) {
+                alert.setTitle(R.string.RESET_CHAT_STATE_DIALOG_TITLE);
+                alert.setMessage(R.string.RESET_CHAT_STATE_DIALOG_MESSAGE);
+                alert.setNegativeButton(R.string.NO, (dialog, whichButton) -> {
+                    Log.d(TAG, "[setNegativeButton]");
+                    preference.callChangeListener(false);
+                });
+                alert.setPositiveButton(R.string.YES, (dialog, whichButton) -> {
+                    Log.d(TAG, "[setPositiveButton]");
+                    preference.callChangeListener(true);
+                });
+                alert.setOnCancelListener(dialogInterface -> {
+                    Log.d(TAG, "[onCancel]");
+                    preference.callChangeListener(false);
+                });
+                alert.setCancelable(true);
+                if (PreferenceManager.getDefaultSharedPreferences(this.requireContext()).getBoolean(getString(R.string.RESET_CHAT_STATE_KEY), false)) {
+                    alert.show();
+                }
             }
             return true;
-        });
-        prefBackgroundMovement.setOnPreferenceChangeListener((preference12, newValue) -> {
-            Log.i(TAG, "Preference Background Movement set to: " + newValue.toString());
-            if (newValue.equals(true)) {
+        } else if (preferenceKey.equals(getString(R.string.RESET_CHAT_LAYOUT_KEY))) {
+            if (!prefResetChatLayout.isChecked()) {
+                prefResetChatLayout.callChangeListener(false);
+            } else if (prefResetChatLayout.isChecked()) {
+                alert.setTitle(R.string.RESET_CHAT_LAYOUT_DIALOG_TITLE);
+                alert.setMessage(R.string.RESET_CHAT_LAYOUT_DIALOG_MESSAGE);
+                alert.setNegativeButton(R.string.NO, (dialog, whichButton) -> {
+                    Log.d(TAG, "[setNegativeButton]");
+                    preference.callChangeListener(false);
 
-            } else if (newValue.equals(false)) {
+                });
+                alert.setPositiveButton(R.string.YES, (dialog, whichButton) -> {
+                    Log.d(TAG, "[setPositiveButton]");
+                    preference.callChangeListener(true);
 
+                });
+                alert.setOnCancelListener(dialogInterface -> {
+                    Log.d(TAG, "[onCancel]");
+                    preference.callChangeListener(false);
+                });
+                alert.setCancelable(true);
+                if (PreferenceManager.getDefaultSharedPreferences(this.requireContext()).getBoolean(getString(R.string.RESET_CHAT_LAYOUT_KEY), false)) {
+                    alert.show();
+                }
             }
             return true;
-        });
-        prefBasicAwareness.setOnPreferenceChangeListener((preference13, newValue) -> {
-            Log.i(TAG, "Preference Basic Awareness set to: " + newValue.toString());
-            if (newValue.equals(true)) {
-            } else if (newValue.equals(false)) {
-            }
+        }
+        return false;
+    }
+
+    /**
+     * Called when a preference has been changed by the user. This is called before the state
+     * of the preference is about to be updated and before the state is persisted.
+     *
+     * @param preference The changed preference
+     * @param newValue   The new value of the preference
+     * @return {@code true} to update the state of the preference with the new value
+     */
+    @Override
+    public boolean onPreferenceChange(@NonNull Preference preference, Object newValue) {
+        String preferenceKey = preference.getKey();
+        if (preferenceKey.equals(getString(R.string.AUTONOMOUS_BLINKING_KEY))) {
+            prefAutonomousBlinking.setChecked((boolean) newValue);
             return true;
-        });
+        } else if (preferenceKey.equals(getString(R.string.BASIC_AWARENESS_KEY))) {
+            prefBasicAwareness.setChecked((boolean) newValue);
+            return true;
+        } else if (preferenceKey.equals(getString(R.string.BACKGROUND_MOVEMENT_KEY))) {
+            prefBackgroundMovement.setChecked((boolean) newValue);
+            return true;
+        } else if (preferenceKey.equals(getString(R.string.MICROPHONE_KEY))) {
+            prefListening.setChecked((boolean) newValue);
+            return true;
+        } else if (preferenceKey.equals(getString(R.string.RESET_CHAT_STATE_KEY))) {
+            prefResetChatState.setChecked((boolean) newValue);
+            return true;
+        } else if (preferenceKey.equals(getString(R.string.RESET_CHAT_LAYOUT_KEY))) {
+            prefResetChatLayout.setChecked((boolean) newValue);
+            return true;
+        }
+        return false;
+    }
+
+    private void addListeners() {
+        prefAutonomousBlinking.setOnPreferenceChangeListener(this);
+        prefBackgroundMovement.setOnPreferenceChangeListener(this);
+        prefBasicAwareness.setOnPreferenceChangeListener(this);
+        prefVolume.setSeekBarIncrement(audioManager.getStreamVolume(AudioManager.STREAM_SYSTEM));
+        prefVolume.setOnPreferenceChangeListener(this);
         prefVolume.setOnPreferenceChangeListener((preference21, newValue) -> {
             Log.i(TAG, "Preference Volume set to: " + newValue.toString());
-            return true;
-        });
-        prefListening.setOnPreferenceChangeListener((preference22, newValue) -> {
-            Log.i(TAG, "Preference Robot Listening set to: " + newValue.toString());
+            audioManager.setStreamVolume(AudioManager.STREAM_SYSTEM, (Integer) newValue, AudioManager.FLAG_PLAY_SOUND);
             return true;
         });
 
-        prefResetChat.setChecked(false);
-        prefResetChat.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(@NonNull Preference preference, Object newValue) {
-                Log.d(TAG, "[onPreferenceChange]: " + newValue);
+        prefResetChatState.setChecked(false);
+        prefResetChatState.setOnPreferenceChangeListener(this);
+        prefResetChatState.setOnPreferenceClickListener(this);
 
-                prefResetChat.setChecked((boolean) newValue);
-
-
-                return false;
-            }
-        });
-        prefResetChat.setOnPreferenceClickListener(preference -> {
-            alert.setTitle(getResources().getString(R.string.reset_chat_dialog_title));
-            alert.setMessage(R.string.reset_chat_dialog);
-            alert.setNegativeButton("No", (dialog, whichButton) -> {
-                Log.d(TAG, "[setNegativeButton]");
-                preference.callChangeListener(false);
-
-            });
-            alert.setPositiveButton("Yes", (dialog, whichButton) -> {
-                Log.d(TAG, "[setPositiveButton]");
-                preference.callChangeListener(true);
-
-            });
-            alert.setOnCancelListener(dialogInterface -> {
-                Log.d(TAG, "[onCancel]");
-                preference.callChangeListener(false);
-            });
-            alert.setCancelable(true);
-            if (PreferenceManager.getDefaultSharedPreferences(this.requireContext()).getBoolean(getString(R.string.RESET_CHAT_KEY), false)) {
-                alert.show();
-            }
-            return true;
-        });
-
+        prefResetChatLayout.setChecked(false);
+        prefResetChatLayout.setOnPreferenceChangeListener(this);
+        prefResetChatLayout.setOnPreferenceClickListener(this);
     }
 
     private void findPreferences() {
         try {
+            preferenceScreen = findPreference(getString(R.string.PREFERENCE_SCREEN_KEY));
+
             prefAutonomousBlinking = findPreference(getString(R.string.AUTONOMOUS_BLINKING_KEY));
             prefBackgroundMovement = findPreference(getString(R.string.BACKGROUND_MOVEMENT_KEY));
             prefBasicAwareness = findPreference(getString(R.string.BASIC_AWARENESS_KEY));
             prefVolume = findPreference(getString(R.string.VOLUME_KEY));
             prefListening = findPreference(getString(R.string.MICROPHONE_KEY));
-            prefResetChat = findPreference(getString(R.string.RESET_CHAT_KEY));
+            prefResetChatState = findPreference(getString(R.string.RESET_CHAT_STATE_KEY));
+            prefResetChatLayout = findPreference(getString(R.string.RESET_CHAT_LAYOUT_KEY));
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
-
 }

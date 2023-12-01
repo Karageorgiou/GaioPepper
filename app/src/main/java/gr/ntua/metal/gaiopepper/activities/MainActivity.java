@@ -221,8 +221,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 Log.d(TAG, "User message: " + userPhrase.getText());
                 updateRecyclerView(LayoutUser, message);
                 replyTo(userPhrase, localeEN);
-                /*messageItemList.add(new MessageItem(LayoutUser, R.drawable.ic_user, message));
-                messageAdapter.notifyItemInserted(messageAdapter.getItemCount() - 1);*/
                 textInputEditText.getText().clear();
             }
         }
@@ -239,9 +237,10 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         boolean autonomousBlinking = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.AUTONOMOUS_BLINKING_KEY), true);
         boolean backgroundMovement = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.BACKGROUND_MOVEMENT_KEY), true);
         boolean basicAwareness = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.BASIC_AWARENESS_KEY), true);
-        String conversationMode = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_MODE_KEY), "NONE");
+        String conversationMode = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_MODE_KEY), "NONE_VALUE");
         String conversationLanguage = PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_LANGUAGE_KEY), "EN");
-        boolean resetChat = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.RESET_CHAT_KEY), false);
+        boolean resetChatState = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.RESET_CHAT_STATE_KEY), false);
+        boolean resetChatLayout = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(getString(R.string.RESET_CHAT_LAYOUT_KEY) , false);
 
 
         AutonomousAbilitiesController.buildHolders(qiContext);
@@ -261,8 +260,17 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             AutonomousAbilitiesController.stopBasicAwareness(qiContext);
         }
 
-        if (resetChat) {
+        if (resetChatState) {
             lastBookmark = null;
+        }
+
+        if (resetChatLayout) {
+            int messageItemListSize = messageItemList.size();
+            messageItemList.clear();
+            runOnUiThread(() -> {
+                messageAdapter.notifyItemRangeRemoved(0,messageItemListSize);
+            });
+
         }
 
         if (Objects.equals(conversationLanguage, getString(R.string.GREEK))) {
@@ -278,13 +286,13 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 e.printStackTrace();
             }
         }
-        if (Objects.equals(conversationMode, getString(R.string.NONE))) {
+        if (Objects.equals(conversationMode, getString(R.string.NONE_VALUE))) {
             if (chatFuture != null) {
                 if (!chatFuture.isSuccess() || !chatFuture.isCancelled() || !chatFuture.isDone()) {
                     chatFuture.requestCancellation();
                 }
             }
-        } else if (Objects.equals(conversationMode, getString(R.string.ORAL_CONVERSATION))) {
+        } else if (Objects.equals(conversationMode, getString(R.string.ORAL_CONVERSATION_VALUE))) {
             hideTextInput();
             if (Objects.equals(conversationLanguage, getString(R.string.GREEK))) {
                 chat = buildChat(chatbot, localeGR);
@@ -293,7 +301,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 chat = buildChat(chatbot, localeEN);
                 runChat(chat);
             }
-        } else if (Objects.equals(conversationMode, getString(R.string.WRITTEN_CONVERSATION))) {
+        } else if (Objects.equals(conversationMode, getString(R.string.WRITTEN_CONVERSATION_VALUE))) {
             if (chatFuture != null) {
                 if (!chatFuture.isSuccess() || !chatFuture.isCancelled() || !chatFuture.isDone()) {
                     chatFuture.requestCancellation();
