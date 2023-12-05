@@ -46,7 +46,7 @@ proposal: %LEARN I have studied various ["minerals and ores" "ores and minerals"
 
 
 proposal: %MINERALS ~p500 ^rand ~conversation ^enable(MINERALS)
-    u:({~i_want to} {~talk} {about} bauxite) ^gotoInTopic(BAUXITE,bauxite)
+    u:({~i_want to} {~talk} {about} bauxite) ^enableThenGotoInTopic(BAUXITE,bauxite)
     #u:(~talk_about Γύψο) ^enableThenGoto (GYPSUM)
     #u:(~talk_about Θείο) ^enableThenGoto (SULFUR)
     #u:(~talk_about Κορούνδιο ) ^enableThenGoto(CORUNDIUM_1)

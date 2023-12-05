@@ -5,7 +5,7 @@ proposal: %BAUXITE $focusedMineral=bauxite
         "Bauxite is one of my favorites."
         "Bauxite is a very usefull ore."
         "Bauxite. ~p500 An interesting ore."
-        ] ~p1000 What would you like to know about it? ^enable(BAUXITE)
+        ] ~p1000 What would you like to know about it? #^enable(BAUXITE)
             u1:(what {"kind of"} {~mineral} is it)
                 Bauxite is a combination of three different minerals,
                ^rand ["diaspore, gibbsite and boehmite."

@@ -14,7 +14,7 @@
         android:theme="@style/Theme.GaioPepper">
 
         <activity
-            android:name=".activities.SplashActivity"
+            android:name=".activities.splash.SplashActivity"
             android:exported="true"
             android:screenOrientation="landscape">
             <intent-filter>
@@ -25,19 +25,19 @@
         </activity>
 
         <activity
-            android:name=".activities.MainActivity"
+            android:name=".activities.main.MainActivity"
             android:exported="true"
             android:screenOrientation="landscape">
         </activity>
 
         <activity
-            android:name=".activities.SettingsActivity"
+            android:name=".activities.settings.SettingsActivity"
             android:exported="true"
             android:screenOrientation="landscape">
         </activity>
 
         <activity
-            android:name=".activities.EncyclopediaActivity"
+            android:name=".activities.encyclopedia.EncyclopediaActivity"
             android:exported="true"
             android:screenOrientation="landscape">
         </activity>

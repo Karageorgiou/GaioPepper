@@ -38,7 +38,7 @@
     <string name="CONVERSATION_TITLE">Συνομιλία</string>
     <string name="AUTONOMOUS_ABILITIES_TITLE">Αυτόνομες Ιδιότητες</string>
     <string name="RESET_CHAT_LAYOUT_KEY">reset_chat_layout_key</string>
-    <string name="RESET_CHAT_LAYOUT_TITLE">Διαγραφή πεοηγούμενων μηνυμάτων</string>
+    <string name="RESET_CHAT_LAYOUT_TITLE">Διαγραφή προηγούμενων μηνυμάτων</string>
     <string name="RESET_CHAT_LAYOUT_DESC">Διαγράφει όλα τα υπάρχοντα μηνύματα απο την οθόνη.</string>
     <string name="RESET_CHAT_LAYOUT_DIALOG_MESSAGE">Εαν υπάρχουν μηνύματα στην οθόνη συνομιλίας θα διαγραφούν.</string>
     <string name="NO">Όχι</string>

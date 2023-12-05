@@ -9,16 +9,17 @@
         <entry key="app/src/main/res/drawable/rounded_corners.xml" value="0.2265" />
         <entry key="app/src/main/res/drawable/rounded_corners_gray.xml" value="0.32" />
         <entry key="app/src/main/res/layout/activity_encyclopedia.xml" value="0.178125" />
-        <entry key="app/src/main/res/layout/activity_main.xml" value="0.18567708333333333" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.22161458333333334" />
         <entry key="app/src/main/res/layout/activity_settings.xml" value="0.178125" />
         <entry key="app/src/main/res/layout/activity_splash.xml" value="0.13359375" />
+        <entry key="app/src/main/res/layout/chat_view.xml" value="0.2814814814814815" />
         <entry key="app/src/main/res/layout/dsdsds.xml" value="0.178125" />
         <entry key="app/src/main/res/layout/message_item_view.xml" value="0.25" />
         <entry key="app/src/main/res/layout/preferences_category.xml" value="0.35625" />
-        <entry key="app/src/main/res/layout/quiz_view.xml" value="0.33" />
+        <entry key="app/src/main/res/layout/quiz_view.xml" value="0.27109375" />
         <entry key="app/src/main/res/layout/robot_message_image_view.xml" value="0.27239583333333334" />
-        <entry key="app/src/main/res/layout/robot_message_item_view.xml" value="0.23059964726631393" />
-        <entry key="app/src/main/res/layout/user_message_item_view.xml" value="0.12291666666666666" />
+        <entry key="app/src/main/res/layout/robot_message_item_view.xml" value="0.67" />
+        <entry key="app/src/main/res/layout/user_message_item_view.xml" value="0.5" />
         <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.32" />
         <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.32" />
         <entry key="app/src/main/res/xml/preferences_root.xml" value="0.20833333333333334" />
