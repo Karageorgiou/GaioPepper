@@ -10,6 +10,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
 
 import com.aldebaran.qi.Function;
@@ -58,10 +60,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     public Intent settingsIntent = null;
 
-    private ChatFragment chatFragment;
+    public ChatFragment chatFragment;
+    public QuizFragment quizFragment;
 
     private FloatingActionButton fabSettings;
     private FloatingActionButton fabEncyclopedia;
+    private FloatingActionButton fabQuiz;
 
     private QiContext qiContext;
 
@@ -133,7 +137,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                         R.raw.bauxite_gr
                 )
         ));
-
         topicListEN = buildTopicList(new LinkedList<Integer>(
                 Arrays.asList(
                         R.raw.lexicon_en,
@@ -141,16 +144,10 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                         R.raw.bauxite_en
                 )
         ));
-
-        Bundle bundle = new Bundle();
-
         chatFragment = new ChatFragment();
-        chatFragment.setArguments(bundle);
+        quizFragment = new QuizFragment();
 
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.chat_container, chatFragment)
-                .commit();
+        changeFragment(chatFragment);
 
         makeSpeechEngine(qiContext);
         try {
@@ -188,6 +185,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         } else if (viewID == R.id.fab_encyclopedia) {
             Intent encyclopediaIntent = new Intent(MainActivity.this, EncyclopediaActivity.class);
             startActivity(encyclopediaIntent);
+        } else if (viewID == R.id.fab_quiz) {
+            if (chatFragment != null && chatFragment.isVisible()) {
+                changeFragment(quizFragment);
+            } else if (quizFragment != null && quizFragment.isVisible()) {
+                changeFragment(chatFragment);
+            }
         }
     }
 
@@ -230,7 +233,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             int messageItemListSize = messageItemList.size();
             messageItemList.clear();
             runOnUiThread(() -> {
-                messageAdapter.notifyItemRangeRemoved(0,messageItemListSize);
+                messageAdapter.notifyItemRangeRemoved(0, messageItemListSize);
             });
 
         }
@@ -254,7 +257,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 }
             }
         } else if (Objects.equals(conversationMode, getString(R.string.ORAL_CONVERSATION_VALUE))) {
-            runOnUiThread(()->{
+            runOnUiThread(() -> {
                 chatFragment.hideTextInput();
             });
             if (Objects.equals(conversationLanguage, getString(R.string.GREEK))) {
@@ -270,7 +273,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                     chatFuture.requestCancellation();
                 }
             }
-            chatFragment.showTextInput();
+            runOnUiThread(() -> {
+                chatFragment.showTextInput();
+            });
         }
     }
 
@@ -453,11 +458,17 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         } catch (Exception e) {
             e.printStackTrace();
         }
+        try {
+            fabQuiz = findViewById(R.id.fab_quiz);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void addListeners() {
         fabSettings.setOnClickListener(this);
         fabEncyclopedia.setOnClickListener(this);
+        fabQuiz.setOnClickListener(this);
     }
 
     private void removeListeners() {
@@ -473,5 +484,19 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             chat.removeAllOnStartedListeners();
         }
 
+    }
+
+    public void changeFragment(Fragment newFragment) {
+        runOnUiThread(() -> {
+            if (newFragment instanceof QuizFragment) {
+                fabQuiz.setImageResource(R.drawable.icons8_chat_100);
+            } else if (newFragment instanceof ChatFragment) {
+                fabQuiz.setImageResource(R.drawable.icons8_quiz_100);
+            }
+        });
+
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.chat_container, newFragment);
+        transaction.commit();
     }
 }
