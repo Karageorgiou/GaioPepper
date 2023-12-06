@@ -40,11 +40,15 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
         Log.i(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         mainActivity = (MainActivity) requireActivity();
+
+
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView: ");
+
         return inflater.inflate(R.layout.quiz_view, container, false);
     }
 
@@ -56,10 +60,35 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
         findViews();
         addListeners();
 
-        Bookmark questionBookmark = mainActivity.bookmarksEN.get("QUESTION.1");
+        for (Bookmark bookmark : mainActivity.questionsEN.values()) {
+            bookmark.async().getName().thenConsume(value -> {
+                Log.d(TAG, "BOOKMARK: " + value.get());
+            });
+        }
+
+
+
+        Bookmark answerBookmark1 = mainActivity.answersEN.get("ANSWER.1.A");
+        assert answerBookmark1 != null : "answerBookmark1 is null";
+        Bookmark answerBookmark2 = mainActivity.answersEN.get("ANSWER.1.B");
+        assert answerBookmark2 != null : "answerBookmark2 is null";
+        Bookmark answerBookmark3 = mainActivity.answersEN.get("ANSWER.1.C");
+        assert answerBookmark3 != null : "answerBookmark3 is null";
+        Bookmark answerBookmark4 = mainActivity.answersEN.get("ANSWER.1.D");
+        assert answerBookmark4 != null : "answerBookmark4 is null";
+
+
+
+
+    }
+
+    @Override
+    public void onStart() {
+        Log.d(TAG, "onStart: ");
+        super.onStart();
+        Bookmark questionBookmark = mainActivity.questionsEN.get("QUESTION.1");
         assert questionBookmark != null : "questionBookmark is null";
         mainActivity.chatbot.async().goToBookmark(questionBookmark, AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
-
 
     }
 
@@ -67,18 +96,18 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
     public void onClick(View view) {
         int viewID = view.getId();
         if (viewID == R.id.btn_answer1) {
-            Log.d(TAG, "Touched button: "+ view.toString());
+            Log.d(TAG, "Touched button: " + view.toString());
         } else if (viewID == R.id.btn_answer2) {
-            Log.d(TAG, "Touched button: "+ view.toString());
+            Log.d(TAG, "Touched button: " + view.toString());
 
         } else if (viewID == R.id.btn_answer3) {
-            Log.d(TAG, "Touched button: "+ view.toString());
+            Log.d(TAG, "Touched button: " + view.toString());
 
         } else if (viewID == R.id.btn_answer4) {
-            Log.d(TAG, "Touched button: "+ view.toString());
+            Log.d(TAG, "Touched button: " + view.toString());
 
         } else if (viewID == R.id.btn_close) {
-            Log.d(TAG, "Touched button: "+ view.toString());
+            Log.d(TAG, "Touched button: " + view.toString());
             mainActivity.changeFragment(mainActivity.chatFragment);
         }
     }
@@ -113,6 +142,12 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
         buttonAnswer4.setOnClickListener(this);
         buttonClose.setOnClickListener(this);
     }
+
+    protected void setQuestion(String question) {
+        textViewQuestion.setText(question);
+    }
+
+
 
 }
 

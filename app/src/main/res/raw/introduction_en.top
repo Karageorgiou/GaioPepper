@@ -7,6 +7,8 @@ topic: ~introduction()
 u:(What time is it?) ^currentTime
 
 #pronunciation:(γεια) [για]
+proposal: %INTRO  [Greetings Hello]. I am Pepper. ~p500 Welcome to Mineralogical Museum, ~p200 Gaio-Orama.
+                  I am your robotic friend and guide, and I will show you the world of mineralogy. ^enable(INTRO)
 
 u:(~greetings {Pepper})
 ^rand ~greetings ^stayInScope %GREETINGS
@@ -28,11 +30,6 @@ u:(~greetings {Pepper})
                 OK. %GREETINGS.2.1.2.2
         u2:(~bad)
         Don't worry, ^rand["I will cheer you up" "I have many interesting topics to discuss"] %GREETINGS.2.2 ^enableThenGoto(LEARN)
-
-
-proposal: %INTRO  [Greetings Hello]. I am Pepper. ~p500 Welcome to Mineralogical Museum, ~p200 Gaio-Orama.
-                  I am your robotic friend and guide, and I will show you the world of mineralogy. ^enableThenGoto(LEARN)
-
 
 
 proposal: %LEARN I have studied various ["minerals and ores" "ores and minerals"]. ~p1000 ["Do you want" "Would you like"] to know about them?

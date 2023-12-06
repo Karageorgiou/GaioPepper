@@ -16,10 +16,7 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        boolean returnNow = getIntent().getBooleanExtra("EXTRA_RETURN_NOW",false);
-        if (returnNow) {
-            onBackPressed();
-        }
+
 
         if (savedInstanceState == null) {
             getSupportFragmentManager()
@@ -32,6 +29,11 @@ public class SettingsActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setTitle(R.string.SETTINGS_TITLE);
+        }
+
+        boolean returnNow = getIntent().getBooleanExtra("EXTRA_RETURN_NOW",false);
+        if (returnNow) {
+            onBackPressed();
         }
     }
 

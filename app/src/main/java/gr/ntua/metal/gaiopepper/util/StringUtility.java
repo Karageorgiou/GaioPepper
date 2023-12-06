@@ -1,8 +1,11 @@
 package gr.ntua.metal.gaiopepper.util;
 
+import android.app.Activity;
 import android.util.Log;
 
 import com.aldebaran.qi.sdk.object.locale.Language;
+
+import java.lang.reflect.Field;
 
 public class StringUtility {
     private static final String TAG = "String Utility";
@@ -48,5 +51,21 @@ public class StringUtility {
             // Return the original username if it doesn't meet the criteria
             return languageName;
         }
+    }
+
+    public static Object checkVariablesForSubstring(Activity activity, String targetSubstring) {
+        Field[] fields = activity.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            String fieldName = field.getName();
+            if (fieldName.contains(targetSubstring)) {
+                try {
+                    Object value = field.get(activity);
+                    return value;
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return null;
     }
 }

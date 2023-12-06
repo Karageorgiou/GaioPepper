@@ -13,9 +13,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-import gr.ntua.metal.gaiopepper.util.ImageManager;
 import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
+import gr.ntua.metal.gaiopepper.util.ImageManager;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageViewHolder> {
     private static final String TAG = "Message Adapter";

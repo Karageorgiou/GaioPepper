@@ -23,19 +23,15 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.aldebaran.qi.sdk.object.conversation.Bookmark;
-import com.aldebaran.qi.sdk.object.conversation.Chat;
 import com.aldebaran.qi.sdk.object.conversation.Phrase;
-import com.aldebaran.qi.sdk.object.conversation.QiChatbot;
-import com.aldebaran.qi.sdk.object.conversation.SpeechEngine;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.Objects;
 
-import gr.ntua.metal.gaiopepper.util.ImageManager;
 import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
+import gr.ntua.metal.gaiopepper.util.ImageManager;
 import gr.ntua.metal.gaiopepper.util.StringUtility;
 
 public class ChatFragment extends Fragment implements View.OnClickListener {
@@ -53,6 +49,8 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
 
     private MainActivity mainActivity;
 
+    private String conversationMode;
+
     /**
      * _____________________________________________________________________________
      * <h1>Override Methods</h1>
@@ -67,6 +65,10 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView: ");
+
+
+
+
         return inflater.inflate(R.layout.chat_view, container, false);
     }
 
@@ -81,10 +83,22 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
         inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         ImageManager.setExpandedImageView(expandedImageView, expandedImageRelativeLayout);
 
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mainActivity);
         linearLayoutManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(mainActivity.messageAdapter);
+
+        conversationMode = getArguments().getString(getString(R.string.CONVERSATION_MODE_KEY));
+        applyPreferences();
+
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        Log.d(TAG, "onAttach: ");
+        super.onAttach(context);
+
+
     }
 
     @Override
@@ -108,7 +122,6 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
             }
         }
     }
-
 
 
     /**
@@ -146,6 +159,26 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
         buttonSend.setOnClickListener(this);
     }
 
+    private void applyPreferences() {
+        if (Objects.equals(conversationMode, getString(R.string.NONE_VALUE))) {
+            if (mainActivity.chatFuture != null) {
+                if (!mainActivity.chatFuture.isSuccess() || !mainActivity.chatFuture.isCancelled() || !mainActivity.chatFuture.isDone()) {
+                    mainActivity.chatFuture.requestCancellation();
+                }
+            }
+            hideTextInput();
+        } else if (Objects.equals(conversationMode, getString(R.string.ORAL_CONVERSATION_VALUE))) {
+            hideTextInput();
+        } else if (Objects.equals(conversationMode, getString(R.string.WRITTEN_CONVERSATION_VALUE))) {
+            if (mainActivity.chatFuture != null) {
+                if (!mainActivity.chatFuture.isSuccess() || !mainActivity.chatFuture.isCancelled() || !mainActivity.chatFuture.isDone()) {
+                    mainActivity.chatFuture.requestCancellation();
+                }
+            }
+            showTextInput();
+        }
+    }
+
     private boolean purgeDuplicateMessages(int image) {
         long currentTime = System.currentTimeMillis();
         long difference = Math.abs(mainActivity.lastImageUpdate - currentTime);
@@ -160,7 +193,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
 
     private boolean purgeDuplicateMessages(String message) {
         long currentTime = System.currentTimeMillis();
-        long difference = Math.abs(mainActivity.lastImageUpdate - currentTime);
+        long difference = Math.abs(mainActivity.lastMessageUpdate - currentTime);
         if (message == mainActivity.lastMessage && difference < 1500) {
             Log.d(TAG, "Time between messages: " + difference + "ms. Duplicate message purged.");
             return true;
@@ -178,7 +211,9 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
             case LayoutRobotImage:
                 mainActivity.runOnUiThread(() -> {
                     mainActivity.messageAdapter.addItem(new MessageItem(messageLayout, R.drawable.ic_pepper_w, image));
-                    recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
+                    if(mainActivity.messageItemList.size()>1) {
+                        recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
+                    }
                     ImageManager.updateImage(image);
                     ImageManager.showImageForSeconds(4);
                 });
@@ -186,7 +221,9 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
             case LayoutUserImage:
                 mainActivity.runOnUiThread(() -> {
                     mainActivity.messageAdapter.addItem(new MessageItem(messageLayout, R.drawable.ic_user, image));
-                    recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
+                    if(mainActivity.messageItemList.size()>1) {
+                        recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
+                    }
                     ImageManager.updateImage(image);
                     ImageManager.showImageForSeconds(4);
                 });
@@ -203,13 +240,17 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
             case LayoutRobot:
                 mainActivity.runOnUiThread(() -> {
                     mainActivity.messageAdapter.addItem(new MessageItem(messageLayout, R.drawable.ic_pepper_w, formattedMessage));
-                    recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
+                    if(mainActivity.messageItemList.size()>1) {
+                        recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
+                    }
                 });
                 break;
             case LayoutUser:
                 mainActivity.runOnUiThread(() -> {
                     mainActivity.messageAdapter.addItem(new MessageItem(messageLayout, R.drawable.ic_user, formattedMessage));
-                    recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
+                    if(mainActivity.messageItemList.size()>1) {
+                        recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
+                    }
                 });
                 break;
         }
