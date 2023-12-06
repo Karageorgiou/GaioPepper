@@ -36,6 +36,7 @@ import java.util.Objects;
 import gr.ntua.metal.gaiopepper.util.ImageManager;
 import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
+import gr.ntua.metal.gaiopepper.util.StringUtility;
 
 public class ChatFragment extends Fragment implements View.OnClickListener {
     private static final String TAG = "Chat Fragment";
@@ -169,33 +170,6 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
         return false;
     }
 
-    private String formatMessage(String message) {
-        String regex = "\\\\.*?\\\\";
-
-        // Replace characters between backslashes with an empty string
-        String formattedMessage = message.replaceAll(regex, "");
-
-        // Ensure there's one space between words and punctuation marks
-        formattedMessage = formattedMessage.replaceAll("\\s+", " ");
-        formattedMessage = formattedMessage.replaceAll("\\s+([.,;?!])", "$1");
-
-        // Capitalize the first letter of the first word
-        formattedMessage = capitalizeFirstLetter(formattedMessage);
-
-        // Capitalize the first letter after '.', '!', '?', or ';'
-        formattedMessage = formattedMessage.replaceAll("([.!?;])\\s*([a-z])", "$1 $2".toUpperCase());
-
-        return formattedMessage;
-    }
-
-    private String capitalizeFirstLetter(String input) {
-        if (input != null && !input.isEmpty()) {
-            return input.substring(0, 1).toUpperCase() + input.substring(1);
-        } else {
-            return input;
-        }
-    }
-
     protected void updateRecyclerView(int messageLayout, int image) {
         if (purgeDuplicateMessages(image)) {
             return;
@@ -224,7 +198,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
         if (purgeDuplicateMessages(message)) {
             return;
         }
-        String formattedMessage = formatMessage(message);
+        String formattedMessage = StringUtility.formatMessage(message);
         switch (messageLayout) {
             case LayoutRobot:
                 mainActivity.runOnUiThread(() -> {

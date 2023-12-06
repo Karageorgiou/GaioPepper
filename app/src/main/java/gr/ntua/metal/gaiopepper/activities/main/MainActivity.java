@@ -44,6 +44,7 @@ import com.aldebaran.qi.sdk.object.locale.Locale;
 import com.aldebaran.qi.sdk.object.locale.Region;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -57,6 +58,7 @@ import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.activities.encyclopedia.EncyclopediaActivity;
 import gr.ntua.metal.gaiopepper.activities.settings.SettingsActivity;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
+import gr.ntua.metal.gaiopepper.util.StringUtility;
 
 public class MainActivity extends RobotActivity
         implements
@@ -89,6 +91,7 @@ public class MainActivity extends RobotActivity
 
     protected Map<String, Bookmark> bookmarksGR;
     protected Map<String, Bookmark> bookmarksEN;
+    private List<Map<String, Bookmark>> bookmarksLibrary;
 
     protected SpeechEngine speechEngine;
 
@@ -116,9 +119,9 @@ public class MainActivity extends RobotActivity
         super.onCreate(savedInstanceState);
         PreferenceManager.setDefaultValues(this, R.xml.preferences_root, false);
 
-        messageItemList = new ArrayList<MessageItem>();
+        bookmarksLibrary = new ArrayList<>();
+        messageItemList = new ArrayList<>();
         messageAdapter = new MessageAdapter(this, messageItemList);
-        //bookmarksEN = new Map<String, Bookmark>();
 
         QiSDK.register(this, this);
         this.setContentView(R.layout.activity_main);
@@ -375,8 +378,25 @@ public class MainActivity extends RobotActivity
             topicList.add(topic);
             extractBookmarks(topic, locale);
         }
+
+
+        String languageCode = StringUtility.getLanguageCode(locale.getLanguage());
+
+        Object foundLocale = checkVariablesForSubstring("locale" + languageCode);
+        if (foundLocale != null) {
+            Locale tempLocale = (Locale) foundLocale;
+            Object foundBookmarks = checkVariablesForSubstring("bookmarks" + languageCode);
+            if (foundBookmarks != null) {
+                Map<String, Bookmark> tempBookmarks = (Map<String, Bookmark>) foundBookmarks;
+
+            }
+        }
+
+
         return topicList;
     }
+
+
 
     private void extractBookmarks(Topic topic, Locale locale) {
         if (locale == localeEN) {
@@ -602,4 +622,32 @@ public class MainActivity extends RobotActivity
         transaction.replace(R.id.chat_container, newFragment);
         transaction.commit();
     }
+
+
+
+    public Object checkVariablesForSubstring(String targetSubstring) {
+        // Get all declared fields in the class
+        Field[] fields = this.getClass().getDeclaredFields();
+
+        for (Field field : fields) {
+            // Get the name of each field
+            String fieldName = field.getName();
+
+            // Check if the field name contains the target substring
+            if (fieldName.contains(targetSubstring)) {
+                System.out.println("Found variable with substring in the name: " + fieldName);
+
+                // You can also get the value of the field if needed
+                try {
+                    Object value = field.get(this);
+                    System.out.println("Value of the variable: " + value);
+                    return value;
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return null;
+    }
+
 }
