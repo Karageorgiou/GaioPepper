@@ -37,7 +37,7 @@ import gr.ntua.metal.gaiopepper.util.ImageManager;
 import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
 
-public class ChatFragment extends Fragment implements View.OnClickListener, QiChatbot.OnBookmarkReachedListener, SpeechEngine.OnSayingChangedListener, Chat.OnHeardListener, Chat.OnSayingChangedListener {
+public class ChatFragment extends Fragment implements View.OnClickListener {
     private static final String TAG = "Chat Fragment";
 
     private InputMethodManager inputMethodManager;
@@ -108,81 +108,29 @@ public class ChatFragment extends Fragment implements View.OnClickListener, QiCh
         }
     }
 
-    /**
-     * Emitted when a Bookmark is reached
-     *
-     * @param bookmark the bookmark value
-     * @since 3
-     */
-    @Override
-    public void onBookmarkReached(Bookmark bookmark) {
-        Log.i(TAG, "[CHATBOT] Bookmark " + bookmark.getName() + " reached.");
-        switch (bookmark.getName()) {
-            case "BAUXITE":
-                updateRecyclerView(LayoutRobotImage, R.drawable.red_bauxite_pissoliths);
-                break;
-            case "PISOLITH":
-                updateRecyclerView(LayoutRobotImage, R.drawable.white_bauxite);
-                break;
-            case "BAUXITE.3":
-                updateRecyclerView(LayoutRobotImage, R.drawable.aluminium);
-                break;
-            default:
-                break;
-        }
-        mainActivity.lastBookmark = bookmark;
-    }
 
-    /**
-     * The Phrase said by a Say action from this factory while it is running.
-     * This value is set when a Say action from this factory starts running
-     * and set to an empty Phrase when the action stops.
-     *
-     * @param phrase the phrase value
-     * @since 3
-     */
-    @Override
-    public void onSayingChanged(Phrase phrase) {
-        String sayingText = phrase.getText();
-        if (!sayingText.isEmpty()) {
-            Log.i(TAG, "[SPEECH ENGINE]/[CHAT] Pepper Reply: " + sayingText);
-            updateRecyclerView(LayoutRobot, sayingText);
-        }
-    }
-
-    /**
-     * The Phrase heard, emitted once the robot has heard a valid Phrase.
-     *
-     * @param heardPhrase the heardPhrase value
-     * @since 3
-     */
-    @Override
-    public void onHeard(Phrase heardPhrase) {
-        String heardText = heardPhrase.getText();
-        if (!heardText.isEmpty()) {
-            Log.i(TAG, "[CHAT] Heard phrase: " + heardPhrase.getText());
-            updateRecyclerView(LayoutUser, heardText);
-        }
-    }
 
     /**
      * _____________________________________________________________________________
      * <h1>UI Methods</h1>
      */
     private void findViews() {
-        textInputLayout = getView().findViewById(R.id.editTextLayout);
+        View rootView = getView();
+        assert rootView != null;
+
+        textInputLayout = rootView.findViewById(R.id.editTextLayout);
         assert textInputLayout != null : "textInputLayout is null";
 
         textInputEditText = (TextInputEditText) textInputLayout.getEditText();
         assert textInputEditText != null : "textInputEditText is null";
 
-        recyclerView = getView().findViewById(R.id.recycler_view);
+        recyclerView = rootView.findViewById(R.id.recycler_view);
         assert recyclerView != null : "recyclerView is null";
 
-        buttonSend = getView().findViewById(R.id.btn_send);
+        buttonSend = rootView.findViewById(R.id.btn_send);
         assert buttonSend != null : "buttonSend is null";
 
-        constraintLayoutBottom = getView().findViewById(R.id.chatView_constraint_bottom);
+        constraintLayoutBottom = rootView.findViewById(R.id.chatView_constraint_bottom);
         assert constraintLayoutBottom != null : "constraintLayoutBottom is null";
 
         expandedImageView = mainActivity.findViewById(R.id.expanded_image);
@@ -248,7 +196,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener, QiCh
         }
     }
 
-    private void updateRecyclerView(int messageLayout, int image) {
+    protected void updateRecyclerView(int messageLayout, int image) {
         if (purgeDuplicateMessages(image)) {
             return;
         }
@@ -272,7 +220,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener, QiCh
         }
     }
 
-    private void updateRecyclerView(int messageLayout, String message) {
+    protected void updateRecyclerView(int messageLayout, String message) {
         if (purgeDuplicateMessages(message)) {
             return;
         }
@@ -293,15 +241,15 @@ public class ChatFragment extends Fragment implements View.OnClickListener, QiCh
         }
     }
 
-    public void hideSoftKeyboard(View view) {
+    protected void hideSoftKeyboard(View view) {
         inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
-    public void hideTextInput() {
+    protected void hideTextInput() {
         constraintLayoutBottom.setMaxHeight(0);
     }
 
-    public void showTextInput() {
+    protected void showTextInput() {
         ConstraintLayout.LayoutParams layoutParams = (ConstraintLayout.LayoutParams) constraintLayoutBottom.getLayoutParams();
         layoutParams.height = 150;
         constraintLayoutBottom.setLayoutParams(layoutParams);

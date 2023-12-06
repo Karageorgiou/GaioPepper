@@ -1,5 +1,9 @@
 package gr.ntua.metal.gaiopepper.activities.main;
 
+import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutRobot;
+import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutRobotImage;
+import static gr.ntua.metal.gaiopepper.models.MessageItem.LayoutUser;
+
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
@@ -44,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
@@ -53,7 +58,14 @@ import gr.ntua.metal.gaiopepper.activities.encyclopedia.EncyclopediaActivity;
 import gr.ntua.metal.gaiopepper.activities.settings.SettingsActivity;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
 
-public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks, View.OnClickListener {
+public class MainActivity extends RobotActivity
+        implements
+        RobotLifecycleCallbacks,
+        View.OnClickListener,
+        QiChatbot.OnBookmarkReachedListener,
+        SpeechEngine.OnSayingChangedListener,
+        Chat.OnHeardListener,
+        Chat.OnSayingChangedListener {
     private static final String TAG = "Main Activity";
 
     private AudioManager audioManager;
@@ -74,6 +86,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     protected List<Topic> topicListGR;
     protected List<Topic> topicListEN;
+
+    protected Map<String, Bookmark> bookmarksGR;
+    protected Map<String, Bookmark> bookmarksEN;
 
     protected SpeechEngine speechEngine;
 
@@ -103,6 +118,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         messageItemList = new ArrayList<MessageItem>();
         messageAdapter = new MessageAdapter(this, messageItemList);
+        //bookmarksEN = new Map<String, Bookmark>();
 
         QiSDK.register(this, this);
         this.setContentView(R.layout.activity_main);
@@ -130,20 +146,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         Log.i(TAG, "onRobotFocusGained");
         this.qiContext = qiContext;
 
-        topicListGR = buildTopicList(new LinkedList<Integer>(
-                Arrays.asList(
-                        R.raw.lexicon_gr,
-                        R.raw.introduction_gr,
-                        R.raw.bauxite_gr
-                )
-        ));
-        topicListEN = buildTopicList(new LinkedList<Integer>(
-                Arrays.asList(
-                        R.raw.lexicon_en,
-                        R.raw.introduction_en,
-                        R.raw.bauxite_en
-                )
-        ));
+        buildTopics();
         chatFragment = new ChatFragment();
         quizFragment = new QuizFragment();
 
@@ -284,7 +287,84 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
      * _____________________________________________________________________________
      * <h1>Conversation Methods</h1>
      */
-    public List<Topic> buildTopicList(List<Integer> topics) {
+    /**
+     * Emitted when a Bookmark is reached
+     *
+     * @param bookmark the bookmark value
+     * @since 3
+     */
+    @Override
+    public void onBookmarkReached(Bookmark bookmark) {
+        Log.i(TAG, "[CHATBOT] Bookmark " + bookmark.getName() + " reached.");
+        switch (bookmark.getName()) {
+            case "BAUXITE":
+                chatFragment.updateRecyclerView(LayoutRobotImage, R.drawable.red_bauxite_pissoliths);
+                break;
+            case "PISOLITH":
+                chatFragment.updateRecyclerView(LayoutRobotImage, R.drawable.white_bauxite);
+                break;
+            case "BAUXITE.3":
+                chatFragment.updateRecyclerView(LayoutRobotImage, R.drawable.aluminium);
+                break;
+            default:
+                break;
+        }
+        lastBookmark = bookmark;
+    }
+
+    /**
+     * The Phrase said by a Say action from this factory while it is running.
+     * This value is set when a Say action from this factory starts running
+     * and set to an empty Phrase when the action stops.
+     *
+     * @param phrase the phrase value
+     * @since 3
+     */
+    @Override
+    public void onSayingChanged(Phrase phrase) {
+        String sayingText = phrase.getText();
+        if (!sayingText.isEmpty()) {
+            Log.i(TAG, "[SPEECH ENGINE]/[CHAT] Pepper Reply: " + sayingText);
+            chatFragment.updateRecyclerView(LayoutRobot, sayingText);
+        }
+    }
+
+    /**
+     * The Phrase heard, emitted once the robot has heard a valid Phrase.
+     *
+     * @param heardPhrase the heardPhrase value
+     * @since 3
+     */
+    @Override
+    public void onHeard(Phrase heardPhrase) {
+        String heardText = heardPhrase.getText();
+        if (!heardText.isEmpty()) {
+            Log.i(TAG, "[CHAT] Heard phrase: " + heardPhrase.getText());
+            chatFragment.updateRecyclerView(LayoutUser, heardText);
+        }
+    }
+
+    private void buildTopics() {
+        topicListGR = buildTopicList(new LinkedList<Integer>(
+                Arrays.asList(
+                        R.raw.lexicon_gr,
+                        R.raw.introduction_gr,
+                        R.raw.bauxite_gr
+                )
+        ), localeGR);
+        topicListEN = buildTopicList(new LinkedList<Integer>(
+                Arrays.asList(
+                        R.raw.lexicon_en,
+                        R.raw.introduction_en,
+                        R.raw.bauxite_en,
+                        R.raw.quiz_en
+                )
+        ), localeEN);
+
+
+    }
+
+    public List<Topic> buildTopicList(List<Integer> topics, Locale locale) {
         List<Topic> topicList;
         topicList = new LinkedList<Topic>();
         for (int topicName : topics) {
@@ -293,8 +373,29 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                     .withResource(topicName)
                     .build();
             topicList.add(topic);
+            extractBookmarks(topic, locale);
         }
         return topicList;
+    }
+
+    private void extractBookmarks(Topic topic, Locale locale) {
+        if (locale == localeEN) {
+            if (bookmarksEN == null) {
+                bookmarksEN = topic.getBookmarks();
+            } else {
+                bookmarksEN.putAll(topic.getBookmarks());
+            }
+            //Log.d(TAG, "BookmarksEN: " + bookmarksEN.toString());
+        }
+        if (locale == localeGR) {
+            if (bookmarksGR == null) {
+                bookmarksGR = topic.getBookmarks();
+            } else {
+                bookmarksGR.putAll(topic.getBookmarks());
+            }
+            //Log.d(TAG, "BookmarksGR: " + bookmarksGR.toString());
+        }
+
     }
 
     /**
@@ -328,7 +429,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         }).get();
 
         if (newChatbot != null) {
-            newChatbot.async().addOnBookmarkReachedListener(chatFragment);
+            newChatbot.async().addOnBookmarkReachedListener(this);
             newChatbot.async().addOnEndedListener(endReason -> {
                 Log.i(TAG, "Chatbot ended for reason: " + endReason);
                 chatFuture.requestCancellation();
@@ -336,7 +437,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             newChatbot.async().addOnAutonomousReactionChangedListener(autonomousReaction -> {
                 ChatbotReaction chatbotReaction = autonomousReaction.getChatbotReaction();
                 Log.d(TAG, "[autonomousReaction]: " + chatbotReaction.toString());
-                chatbotReaction.runWith(speechEngine);
+                if (speechEngine.getSaying().getText().isEmpty() && chat.getSaying().getText().isEmpty()){
+                    chatbotReaction.runWith(speechEngine);
+                }
             });
             if (lastBookmark != null) {
                 newChatbot.async().goToBookmark(lastBookmark, AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
@@ -377,8 +480,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             }
 
         });
-        chat.async().addOnSayingChangedListener(chatFragment);
-        chat.async().addOnHeardListener(chatFragment);
+        chat.async().addOnSayingChangedListener(this);
+        chat.async().addOnHeardListener(this);
         chat.async().addOnNormalReplyFoundForListener(input -> {
             Log.i(TAG, "[NormalReplyFoundFor]: " + input.getText());
         });
@@ -412,7 +515,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     private void makeSpeechEngine(QiContext qiContext) {
         speechEngine = qiContext.getConversation().makeSpeechEngine(qiContext.getRobotContext());
-        speechEngine.addOnSayingChangedListener(chatFragment);
+        speechEngine.addOnSayingChangedListener(this);
     }
 
     public void replyTo(Phrase userPhrase, Locale locale) {

@@ -27,6 +27,11 @@ concept:(no) [
     "{no} I don't want {to}"
 ]
 
+concept:(A) A
+concept:(B) B
+concept:(C) C
+concept:(D) D
+
 concept:(p200) \pau=200\
 concept:(p500) \pau=500\
 concept:(p1000) \pau=1000\

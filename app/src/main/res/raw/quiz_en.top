@@ -1,0 +1,8 @@
+topic: ~quiz_en()
+
+
+proposal: %QUESTION.1 Which is a physical feature of Bauxite that helps us identify the mineral?
+    u1:([~A "Bauxite often exhibits a pisolitic characteristics."]) %ANSWER.1.A
+    u1:([~B "Bauxite often exhibits a analithic characteristics."]) %ANSWER.1.B
+    u1:([~C "Bauxite often exhibits a mesolithic characteristics."]) %ANSWER.1.C
+    u1:([~D "Bauxite often shines when exposed to UV radiation."]) %ANSWER.1.D

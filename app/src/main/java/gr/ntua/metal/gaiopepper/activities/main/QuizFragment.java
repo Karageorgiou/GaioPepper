@@ -13,6 +13,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.aldebaran.qi.sdk.object.conversation.AutonomousReactionImportance;
+import com.aldebaran.qi.sdk.object.conversation.AutonomousReactionValidity;
+import com.aldebaran.qi.sdk.object.conversation.Bookmark;
+
 import gr.ntua.metal.gaiopepper.R;
 
 public class QuizFragment extends Fragment implements View.OnClickListener {
@@ -52,6 +56,11 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
         findViews();
         addListeners();
 
+        Bookmark questionBookmark = mainActivity.bookmarksEN.get("QUESTION.1");
+        assert questionBookmark != null : "questionBookmark is null";
+        mainActivity.chatbot.async().goToBookmark(questionBookmark, AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
+
+
     }
 
     @Override
@@ -80,17 +89,19 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
      * <h1>UI Methods</h1>
      */
     private void findViews() {
-        textViewQuestion = getView().findViewById(R.id.tv_question);
+        View rootView = getView();
+        assert rootView != null;
+        textViewQuestion = rootView.findViewById(R.id.tv_question);
         assert textViewQuestion != null : "textViewQuestion is null";
-        buttonAnswer1 = getView().findViewById(R.id.btn_answer1);
+        buttonAnswer1 = rootView.findViewById(R.id.btn_answer1);
         assert buttonAnswer1 != null : "buttonAnswer1 is null";
-        buttonAnswer2 = getView().findViewById(R.id.btn_answer2);
+        buttonAnswer2 = rootView.findViewById(R.id.btn_answer2);
         assert buttonAnswer2 != null : "buttonAnswer2 is null";
-        buttonAnswer3 = getView().findViewById(R.id.btn_answer3);
+        buttonAnswer3 = rootView.findViewById(R.id.btn_answer3);
         assert buttonAnswer3 != null : "buttonAnswer3 is null";
-        buttonAnswer4 = getView().findViewById(R.id.btn_answer4);
+        buttonAnswer4 = rootView.findViewById(R.id.btn_answer4);
         assert buttonAnswer4 != null : "buttonAnswer4 is null";
-        buttonClose = getView().findViewById(R.id.btn_close);
+        buttonClose = rootView.findViewById(R.id.btn_close);
         assert buttonClose != null : "buttonCLose is null";
 
     }
