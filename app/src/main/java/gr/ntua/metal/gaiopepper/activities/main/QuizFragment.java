@@ -41,7 +41,9 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         mainActivity = (MainActivity) requireActivity();
 
-
+        Bookmark questionBookmark = mainActivity.chatManager.questionsEN.get("QUESTION.1");
+        assert questionBookmark != null : "questionBookmark is null";
+        mainActivity.chatManager.chatbot.async().goToBookmark(questionBookmark, AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
 
     }
 
@@ -60,21 +62,21 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
         findViews();
         addListeners();
 
-        for (Bookmark bookmark : mainActivity.questionsEN.values()) {
+        /*for (Bookmark bookmark : mainActivity.questionsEN.values()) {
             bookmark.async().getName().thenConsume(value -> {
                 Log.d(TAG, "BOOKMARK: " + value.get());
             });
-        }
+        }*/
 
 
 
-        Bookmark answerBookmark1 = mainActivity.answersEN.get("ANSWER.1.A");
+        Bookmark answerBookmark1 = mainActivity.chatManager.answersEN.get("ANSWER.1.A");
         assert answerBookmark1 != null : "answerBookmark1 is null";
-        Bookmark answerBookmark2 = mainActivity.answersEN.get("ANSWER.1.B");
+        Bookmark answerBookmark2 = mainActivity.chatManager.answersEN.get("ANSWER.1.B");
         assert answerBookmark2 != null : "answerBookmark2 is null";
-        Bookmark answerBookmark3 = mainActivity.answersEN.get("ANSWER.1.C");
+        Bookmark answerBookmark3 = mainActivity.chatManager.answersEN.get("ANSWER.1.C");
         assert answerBookmark3 != null : "answerBookmark3 is null";
-        Bookmark answerBookmark4 = mainActivity.answersEN.get("ANSWER.1.D");
+        Bookmark answerBookmark4 = mainActivity.chatManager.answersEN.get("ANSWER.1.D");
         assert answerBookmark4 != null : "answerBookmark4 is null";
 
 
@@ -86,9 +88,7 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
     public void onStart() {
         Log.d(TAG, "onStart: ");
         super.onStart();
-        Bookmark questionBookmark = mainActivity.questionsEN.get("QUESTION.1");
-        assert questionBookmark != null : "questionBookmark is null";
-        mainActivity.chatbot.async().goToBookmark(questionBookmark, AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
+
 
     }
 

@@ -60,6 +60,8 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
         Log.i(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         mainActivity = (MainActivity) requireActivity();
+
+
     }
 
     @Override
@@ -94,14 +96,6 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
     }
 
     @Override
-    public void onAttach(@NonNull Context context) {
-        Log.d(TAG, "onAttach: ");
-        super.onAttach(context);
-
-
-    }
-
-    @Override
     public void onClick(View view) {
         int viewID = view.getId();
         if (viewID == R.id.editTextHumanInput) {
@@ -114,7 +108,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
                 Log.d(TAG, "[onClick] User message: " + userPhrase.getText());
                 try {
                     updateRecyclerView(LayoutUser, message);
-                    mainActivity.replyTo(userPhrase, mainActivity.localeEN);
+                    mainActivity.chatManager.replyTo(userPhrase, mainActivity.chatManager.localeEN);
                     textInputEditText.getText().clear();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -161,18 +155,18 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
 
     private void applyPreferences() {
         if (Objects.equals(conversationMode, getString(R.string.NONE_VALUE))) {
-            if (mainActivity.chatFuture != null) {
-                if (!mainActivity.chatFuture.isSuccess() || !mainActivity.chatFuture.isCancelled() || !mainActivity.chatFuture.isDone()) {
-                    mainActivity.chatFuture.requestCancellation();
+            if (mainActivity.chatManager.chatFuture != null) {
+                if (!mainActivity.chatManager.chatFuture.isSuccess() || !mainActivity.chatManager.chatFuture.isCancelled() || !mainActivity.chatManager.chatFuture.isDone()) {
+                    mainActivity.chatManager.chatFuture.requestCancellation();
                 }
             }
             hideTextInput();
         } else if (Objects.equals(conversationMode, getString(R.string.ORAL_CONVERSATION_VALUE))) {
             hideTextInput();
         } else if (Objects.equals(conversationMode, getString(R.string.WRITTEN_CONVERSATION_VALUE))) {
-            if (mainActivity.chatFuture != null) {
-                if (!mainActivity.chatFuture.isSuccess() || !mainActivity.chatFuture.isCancelled() || !mainActivity.chatFuture.isDone()) {
-                    mainActivity.chatFuture.requestCancellation();
+            if (mainActivity.chatManager.chatFuture != null) {
+                if (!mainActivity.chatManager.chatFuture.isSuccess() || !mainActivity.chatManager.chatFuture.isCancelled() || !mainActivity.chatManager.chatFuture.isDone()) {
+                    mainActivity.chatManager.chatFuture.requestCancellation();
                 }
             }
             showTextInput();
@@ -214,9 +208,9 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
                     if(mainActivity.messageItemList.size()>1) {
                         recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
                     }
-                    ImageManager.updateImage(image);
-                    ImageManager.showImageForSeconds(4);
                 });
+                ImageManager.updateImage(image);
+                ImageManager.showImageForSeconds(4);
                 break;
             case LayoutUserImage:
                 mainActivity.runOnUiThread(() -> {
@@ -224,9 +218,9 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
                     if(mainActivity.messageItemList.size()>1) {
                         recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
                     }
-                    ImageManager.updateImage(image);
-                    ImageManager.showImageForSeconds(4);
                 });
+                ImageManager.updateImage(image);
+                ImageManager.showImageForSeconds(4);
                 break;
         }
     }
