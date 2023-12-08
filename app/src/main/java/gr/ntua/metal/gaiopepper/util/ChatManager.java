@@ -34,6 +34,7 @@ import gr.ntua.metal.gaiopepper.activities.main.MainActivity;
 
 public class ChatManager {
     private static final String TAG = "Chat Manager";
+    private Bookmark lastBookmark = null;
 
 
     private final MainActivity mainActivity;
@@ -98,25 +99,26 @@ public class ChatManager {
 
     public void registerBookmarksToLibrary(Language language) {
         String languageCode = StringUtility.getLanguageCode(language);
-        Object foundBookmarks = StringUtility.checkVariablesForSubstring(mainActivity, "bookmarks" + languageCode);
+        Object foundBookmarks = StringUtility.checkVariablesForSubstring(this, "bookmarks" + languageCode);
         if (foundBookmarks != null) {
             Map<String, Bookmark> tempBookmarks = (Map<String, Bookmark>) foundBookmarks;
             if (!bookmarksLibrary.contains(tempBookmarks)) {
                 bookmarksLibrary.add(tempBookmarks);
             }
 
-            Object foundQuestions = StringUtility.checkVariablesForSubstring(mainActivity, "questions" + languageCode);
+            Object foundQuestions = StringUtility.checkVariablesForSubstring(this, "questions" + languageCode);
             if (foundQuestions != null) {
                 Map<String, Bookmark> tempQuestions = (Map<String, Bookmark>) foundQuestions;
                 for (Map.Entry<String, Bookmark> entry : tempBookmarks.entrySet()) {
                     if (entry.getKey().contains("QUESTION.")) {
+                        Log.d(TAG, "Found Bookmark with name: " + entry.getKey());
                         if (!tempQuestions.containsKey(entry.getKey())) {
                             tempQuestions.put(entry.getKey(), entry.getValue());
                         }
                     }
                 }
 
-                Object foundAnswers = StringUtility.checkVariablesForSubstring(mainActivity, "answers" + languageCode);
+                Object foundAnswers = StringUtility.checkVariablesForSubstring(this, "answers" + languageCode);
                 if (foundAnswers != null) {
                     Map<String, Bookmark> tempAnswers = (Map<String, Bookmark>) foundAnswers;
                     for (Map.Entry<String, Bookmark> entry : tempBookmarks.entrySet()) {
@@ -189,8 +191,8 @@ public class ChatManager {
                 chatFuture.requestCancellation();
             });
             newChatbot.async().addOnAutonomousReactionChangedListener(mainActivity);
-            if (mainActivity.getLastBookmark() != null) {
-                newChatbot.async().goToBookmark(mainActivity.getLastBookmark(), AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
+            if (this.lastBookmark != null) {
+                newChatbot.async().goToBookmark(this.lastBookmark, AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
             }
             return newChatbot;
         } else {
@@ -288,8 +290,6 @@ public class ChatManager {
                                     runWithFuture.thenConsume(future -> {
                                         if (future.hasError()) {
                                             Log.e(TAG, "runWith Future [ERROR]: " + future.getErrorMessage());
-                                        } else {
-
                                         }
                                     });
                                 }
@@ -302,4 +302,15 @@ public class ChatManager {
             }
         });
     }
+
+    public Bookmark getLastBookmark() {
+        return this.lastBookmark;
+    }
+
+    public void setLastBookmark(Bookmark bookmark) {
+        this.lastBookmark = bookmark;
+    }
+
+
+
 }

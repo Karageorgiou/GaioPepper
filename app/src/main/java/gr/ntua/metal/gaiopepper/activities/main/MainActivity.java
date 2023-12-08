@@ -32,9 +32,6 @@ import com.aldebaran.qi.sdk.object.conversation.ChatbotReactionHandlingStatus;
 import com.aldebaran.qi.sdk.object.conversation.Phrase;
 import com.aldebaran.qi.sdk.object.conversation.QiChatbot;
 import com.aldebaran.qi.sdk.object.conversation.SpeechEngine;
-import com.aldebaran.qi.sdk.object.conversation.Topic;
-import com.aldebaran.qi.sdk.object.locale.Language;
-import com.aldebaran.qi.sdk.object.locale.Locale;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
@@ -49,6 +46,7 @@ import gr.ntua.metal.gaiopepper.activities.settings.SettingsActivity;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
 import gr.ntua.metal.gaiopepper.util.AutonomousAbilitiesManager;
 import gr.ntua.metal.gaiopepper.util.ChatManager;
+import gr.ntua.metal.gaiopepper.util.TimingManager;
 
 public class MainActivity extends RobotActivity
         implements
@@ -78,21 +76,13 @@ public class MainActivity extends RobotActivity
     protected List<MessageItem> messageItemList;
     protected MessageAdapter messageAdapter;
 
-    private Bookmark lastBookmark = null;
-    private AutonomousReaction lastAutonomousReaction = null;
-    protected int lastImage = 0;
-    protected String lastMessage = "";
-    protected long lastImageUpdate = 100000;
-    protected long lastMessageUpdate = 100000;
-    private long lastAutonomousReactionUpdate = 100000;
+    public TimingManager timingManager;
 
 
     public QiContext getQiContext() {
         return this.qiContext;
     }
-    public Bookmark getLastBookmark() {
-        return this.lastBookmark;
-    }
+
 
 
     /**
@@ -103,7 +93,8 @@ public class MainActivity extends RobotActivity
     protected void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "onCreate");
         super.onCreate(savedInstanceState);
-        //PreferenceManager.setDefaultValues(this, R.xml.preferences_root, true);
+
+        timingManager = new TimingManager();
 
         PreferenceManager.getDefaultSharedPreferences(this).edit().clear().commit();
         PreferenceManager.setDefaultValues(this, R.xml.preferences_root, true);
@@ -132,6 +123,10 @@ public class MainActivity extends RobotActivity
 
         findViews();
         addListeners();
+
+
+
+
     }
 
     @Override
@@ -229,7 +224,7 @@ public class MainActivity extends RobotActivity
         }
 
         if (resetChatState) {
-            lastBookmark = null;
+            chatManager.setLastBookmark(null);
         }
         if (resetChatLayout) {
             int messageItemListSize = messageItemList.size();
@@ -265,13 +260,13 @@ public class MainActivity extends RobotActivity
             if (Objects.equals(conversationLanguage, getString(R.string.GREEK))) {
                 chatManager.chat = chatManager.buildChat(chatManager.chatbot, chatManager.localeGR);
                 chatManager.runChat(chatManager.chat, chatManager.localeGR);
-                if (lastBookmark == null) {
+                if (chatManager.getLastBookmark() == null) {
                     //chatbot.async().goToBookmark(bookmarksGR.get("INTRO"), AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
                 }
             } else if (Objects.equals(conversationLanguage, getString(R.string.ENGLISH))) {
                 chatManager.chat = chatManager.buildChat(chatManager.chatbot, chatManager.localeEN);
                 chatManager.runChat(chatManager.chat, chatManager.localeGR);
-                if (lastBookmark == null) {
+                if (chatManager.getLastBookmark() == null) {
                     //chatbot.async().goToBookmark(bookmarksEN.get("INTRO"), AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
                 }
             }
@@ -285,11 +280,11 @@ public class MainActivity extends RobotActivity
                 chatFragment.showTextInput();
             });
             if (Objects.equals(conversationLanguage, getString(R.string.GREEK))) {
-                if (lastBookmark == null) {
+                if (chatManager.getLastBookmark() == null) {
                     //chatbot.async().goToBookmark(bookmarksGR.get("INTRO"), AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
                 }
             } else if (Objects.equals(conversationLanguage, getString(R.string.ENGLISH))) {
-                if (lastBookmark == null) {
+                if (chatManager.getLastBookmark() == null) {
                     //chatbot.async().goToBookmark(bookmarksEN.get("INTRO"), AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
                 }
             }
@@ -324,7 +319,7 @@ public class MainActivity extends RobotActivity
             default:
                 break;
         }
-        lastBookmark = bookmark;
+        chatManager.setLastBookmark(bookmark);
     }
 
     /**
@@ -342,8 +337,8 @@ public class MainActivity extends RobotActivity
             Log.i(TAG, "[SPEECH ENGINE]/[CHAT] Pepper Reply: " + sayingText);
             chatFragment.updateRecyclerView(LayoutRobot, sayingText);
 
-            if (lastBookmark != null) {
-                lastBookmark.async().getName().thenConsume(value -> {
+            if (chatManager.getLastBookmark() != null) {
+                chatManager.getLastBookmark().async().getName().thenConsume(value -> {
                     if (value.hasError()) {
                         Log.i(TAG, "[lastBookmark.async().getName()]: " + value.getErrorMessage());
                     } else {
@@ -385,93 +380,33 @@ public class MainActivity extends RobotActivity
      */
     @Override
     public void onAutonomousReactionChanged(AutonomousReaction autonomousReaction) {
-        long currentTime = System.currentTimeMillis();
-        long difference = Math.abs(lastAutonomousReactionUpdate - currentTime);
-        if (autonomousReaction.equals(lastAutonomousReaction) && difference < 1000) {
-            Log.d(TAG, "Time between autonomousReactions: " + difference + "ms. Duplicate autonomousReaction purged.");
-
-        } else {
-            lastAutonomousReactionUpdate = currentTime;
-            lastAutonomousReaction = autonomousReaction;
-
-            ChatbotReaction chatbotReaction = autonomousReaction.getChatbotReaction();
+        timingManager.checkForDuplicates(autonomousReaction, autonomousReaction1 -> {
+            ChatbotReaction chatbotReaction = autonomousReaction1.getChatbotReaction();
             if (chatbotReaction.getChatbotReactionHandlingStatus() == ChatbotReactionHandlingStatus.HANDLED) {
-                Log.d(TAG, "[autonomousReaction]: ChatbotReaction already handled ");
+                Log.d(TAG, "[autonomousReaction] [ALREADY HANDLED] ");
             } else if (chatbotReaction.getChatbotReactionHandlingStatus() == ChatbotReactionHandlingStatus.REJECTED) {
-                Log.d(TAG, "[autonomousReaction]:ChatbotReaction rejected ");
+                Log.d(TAG, "[autonomousReaction] [REJECTED] ");
             } else {
-                Log.d(TAG, "[autonomousReaction]: " + chatbotReaction.toString());
                 if (!chatManager.speechEngine.getSaying().getText().isEmpty()) {
-                    Log.d(TAG, "[autonomousReaction][speechEngine.getSaying]: " + chatManager.speechEngine.getSaying().getText());
+                    Log.d(TAG, "[autonomousReaction] [NOT HANDLED] [speechEngine.getSaying]: " + chatManager.speechEngine.getSaying().getText());
                 } else {
                     if (chatManager.chat == null) {
-                        Log.d(TAG, "[autonomousReaction]: chat is null");
+                        Log.d(TAG, "[autonomousReaction] [NOT HANDLED]: chat is null");
                         chatbotReaction.async().runWith(chatManager.speechEngine);
                     } else {
                         if (!chatManager.chat.getSaying().getText().isEmpty()) {
-                            Log.d(TAG, "[autonomousReaction][chat.getSaying]: " + chatManager.chat.getSaying().getText());
+                            Log.d(TAG, "[autonomousReaction] [NOT HANDLED] [chat.getSaying]: " + chatManager.chat.getSaying().getText());
                         } else {
+                            Log.d(TAG, "[autonomousReaction] [RUNNING NOW] " );
                             chatbotReaction.async().runWith(chatManager.speechEngine);
+                            return;
                         }
                     }
                 }
             }
-        }
+            return;
+        });
     }
-
-    /*private void buildTopics() {
-
-
-        chatManager.buildTopics();
-    }
-
-    public List<Topic> buildTopicList(List<Integer> topics, Locale locale) {
-
-
-        return chatManager.buildTopicList(topics, locale);
-    }
-
-    private void registerBookmarksToLibrary(Language language) {
-        chatManager.registerBookmarksToLibrary(language);
-    }
-
-    private void extractBookmarks(Topic topic, Locale locale) {
-
-        chatManager.extractBookmarks(topic, locale);
-    }
-
-    *//**
-     * Returns a <b>QiChatbot</b> instance built with the specified parameters.
-     * The topicList attribute must be generated by <b>buildTopicList</b> method.
-     * The locale is already created as a global variable and can be found on top.
-     *
-     * @param topicList a topicList created by buildTopicList method
-     * @param locale    Locale from package com.aldebaran.qi.sdk.object.locale
-     * @see com.aldebaran.qi.sdk.object.conversation.QiChatbot QiChatbot
-     * @see com.aldebaran.qi.sdk.object.locale.Locale Locale
-     *//*
-    public QiChatbot buildQiChatbot(List<Topic> topicList, Locale locale) throws ExecutionException {
-
-        return chatManager.buildQiChatbot(topicList, locale);
-    }
-
-    public Chat buildChat(QiChatbot chatbot, Locale locale) throws ExecutionException {
-
-        return chatManager.buildChat(chatbot, locale);
-    }
-
-    public void runChat(Chat chat, Locale locale) {
-
-        chatManager.runChat(chat, locale);
-    }
-
-    private void makeSpeechEngine(QiContext qiContext) {
-        chatManager.makeSpeechEngine(qiContext);
-    }
-
-    public void replyTo(Phrase userPhrase, Locale locale) {
-        chatManager.replyTo(userPhrase, locale);
-    }*/
 
 
     /**

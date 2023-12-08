@@ -33,6 +33,7 @@ import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
 import gr.ntua.metal.gaiopepper.util.ImageManager;
 import gr.ntua.metal.gaiopepper.util.StringUtility;
+import gr.ntua.metal.gaiopepper.util.TimingManager;
 
 public class ChatFragment extends Fragment implements View.OnClickListener {
     private static final String TAG = "Chat Fragment";
@@ -173,81 +174,66 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    private boolean purgeDuplicateMessages(int image) {
-        long currentTime = System.currentTimeMillis();
-        long difference = Math.abs(mainActivity.lastImageUpdate - currentTime);
-        if (image == mainActivity.lastImage && difference < 1500) {
-            Log.d(TAG, "Time between messages: " + difference + "ms. Duplicate message purged.");
-            return true;
-        }
-        mainActivity.lastImage = image;
-        mainActivity.lastImageUpdate = currentTime;
-        return false;
-    }
-
-    private boolean purgeDuplicateMessages(String message) {
-        long currentTime = System.currentTimeMillis();
-        long difference = Math.abs(mainActivity.lastMessageUpdate - currentTime);
-        if (message == mainActivity.lastMessage && difference < 1500) {
-            Log.d(TAG, "Time between messages: " + difference + "ms. Duplicate message purged.");
-            return true;
-        }
-        mainActivity.lastMessage = message;
-        mainActivity.lastMessageUpdate = currentTime;
-        return false;
-    }
-
     protected void updateRecyclerView(int messageLayout, int image) {
-        if (purgeDuplicateMessages(image)) {
+        mainActivity.timingManager.checkForDuplicates(image, purged -> {
+            Log.d(TAG, "Updating recyclerView");
+            if (purged) {
+                return;
+            }
+            switch (messageLayout) {
+                case LayoutRobotImage:
+                    mainActivity.runOnUiThread(() -> {
+                        mainActivity.messageAdapter.addItem(new MessageItem(messageLayout, R.drawable.ic_pepper_w, image));
+                        if(mainActivity.messageItemList.size()>1) {
+                            recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
+                        }
+                        ImageManager.updateImage(image);
+                        ImageManager.showImageForSeconds(4);
+                    });
+
+                    break;
+                case LayoutUserImage:
+                    mainActivity.runOnUiThread(() -> {
+                        mainActivity.messageAdapter.addItem(new MessageItem(messageLayout, R.drawable.ic_user, image));
+                        if(mainActivity.messageItemList.size()>1) {
+                            recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
+                        }
+                        ImageManager.updateImage(image);
+                        ImageManager.showImageForSeconds(4);
+                    });
+                    break;
+            }
             return;
-        }
-        switch (messageLayout) {
-            case LayoutRobotImage:
-                mainActivity.runOnUiThread(() -> {
-                    mainActivity.messageAdapter.addItem(new MessageItem(messageLayout, R.drawable.ic_pepper_w, image));
-                    if(mainActivity.messageItemList.size()>1) {
-                        recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
-                    }
-                });
-                ImageManager.updateImage(image);
-                ImageManager.showImageForSeconds(4);
-                break;
-            case LayoutUserImage:
-                mainActivity.runOnUiThread(() -> {
-                    mainActivity.messageAdapter.addItem(new MessageItem(messageLayout, R.drawable.ic_user, image));
-                    if(mainActivity.messageItemList.size()>1) {
-                        recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
-                    }
-                });
-                ImageManager.updateImage(image);
-                ImageManager.showImageForSeconds(4);
-                break;
-        }
+        });
     }
 
     protected void updateRecyclerView(int messageLayout, String message) {
-        if (purgeDuplicateMessages(message)) {
+        mainActivity.timingManager.checkForDuplicates(message, purged -> {
+            Log.d(TAG, "Updating recyclerView");
+            if (purged) {
+                return;
+            }
+            String formattedMessage = StringUtility.formatMessage(message);
+            switch (messageLayout) {
+                case LayoutRobot:
+                    mainActivity.runOnUiThread(() -> {
+                        mainActivity.messageAdapter.addItem(new MessageItem(messageLayout, R.drawable.ic_pepper_w, formattedMessage));
+                        if(mainActivity.messageItemList.size()>1) {
+                            recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
+                        }
+                    });
+                    break;
+                case LayoutUser:
+                    mainActivity.runOnUiThread(() -> {
+                        mainActivity.messageAdapter.addItem(new MessageItem(messageLayout, R.drawable.ic_user, formattedMessage));
+                        if(mainActivity.messageItemList.size()>1) {
+                            recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
+                        }
+                    });
+                    break;
+            }
             return;
-        }
-        String formattedMessage = StringUtility.formatMessage(message);
-        switch (messageLayout) {
-            case LayoutRobot:
-                mainActivity.runOnUiThread(() -> {
-                    mainActivity.messageAdapter.addItem(new MessageItem(messageLayout, R.drawable.ic_pepper_w, formattedMessage));
-                    if(mainActivity.messageItemList.size()>1) {
-                        recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
-                    }
-                });
-                break;
-            case LayoutUser:
-                mainActivity.runOnUiThread(() -> {
-                    mainActivity.messageAdapter.addItem(new MessageItem(messageLayout, R.drawable.ic_user, formattedMessage));
-                    if(mainActivity.messageItemList.size()>1) {
-                        recyclerView.scrollToPosition(mainActivity.messageItemList.size() - 1);
-                    }
-                });
-                break;
-        }
+        });
     }
 
     protected void hideSoftKeyboard(View view) {

@@ -1,6 +1,5 @@
 package gr.ntua.metal.gaiopepper.util;
 
-import android.app.Activity;
 import android.util.Log;
 
 import com.aldebaran.qi.sdk.object.locale.Language;
@@ -40,12 +39,12 @@ public class StringUtility {
 
     public static String getLanguageCode(Language language) {
         String languageName = language.name();
-        Log.d(TAG,"LANG: " + language);
+        //Log.d(TAG,"LANG: " + language);
         // Check if the username is not null and has at least two characters
         if (languageName != null && languageName.length() >= 2) {
             // Extract the first two characters and capitalize them
             String shortenedAndCapitalized = languageName.substring(0, 2).toUpperCase();
-            Log.d(TAG,"CODE: " + shortenedAndCapitalized);
+            //Log.d(TAG,"CODE: " + shortenedAndCapitalized);
             return shortenedAndCapitalized;
         } else {
             // Return the original username if it doesn't meet the criteria
@@ -53,11 +52,12 @@ public class StringUtility {
         }
     }
 
-    public static Object checkVariablesForSubstring(Activity activity, String targetSubstring) {
+    public static Object checkVariablesForSubstring(ChatManager activity, String targetSubstring) {
         Field[] fields = activity.getClass().getDeclaredFields();
         for (Field field : fields) {
             String fieldName = field.getName();
             if (fieldName.contains(targetSubstring)) {
+                Log.d(TAG, "Found variable with name: " + fieldName);
                 try {
                     Object value = field.get(activity);
                     return value;
