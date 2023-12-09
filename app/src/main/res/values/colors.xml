@@ -9,5 +9,7 @@
     <color name="white">#FFFFFFFF</color>
     <color name="logo_yellow">#BF9000</color>
     <color name="logo_yellow_2">#937006</color>
+    <color name="red">#EC0000</color>
+    <color name="green">#20D500</color>
 
 </resources>

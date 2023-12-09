@@ -165,5 +165,26 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
     }
 
 
+    public void changeButtonColor(String answerID, int colorID) {
+        switch (answerID) {
+            case "A":
+                buttonAnswer1.setBackgroundColor(getResources().getColor(colorID, mainActivity.getTheme()));
+                break;
+            case "B":
+                buttonAnswer2.setBackgroundColor(getResources().getColor(colorID, mainActivity.getTheme()));
+                break;
+            case "C":
+                buttonAnswer3.setBackgroundColor(getResources().getColor(colorID, mainActivity.getTheme()));
+                break;
+            case "D":
+                buttonAnswer4.setBackgroundColor(getResources().getColor(colorID, mainActivity.getTheme()));
+                break;
+            default:
+                Log.e(TAG, "Invalid answerID: " + answerID);
+                break;
+
+        }
+    }
+
 }
 

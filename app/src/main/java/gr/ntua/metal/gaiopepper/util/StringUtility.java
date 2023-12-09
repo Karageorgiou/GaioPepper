@@ -115,4 +115,33 @@ public class StringUtility {
         return null;
     }
 
+    public static Map<String, String> extractAnswerCorrectness(String content) {
+        Map<String, String> result = new HashMap<>();
+        String regex = "\\^enableThenGoto\\((CORRECT|FALSE)\\)";
+        Pattern pattern = Pattern.compile(regex);
+
+        // Split the input into lines
+        String[] lines = content.split("\n");
+
+        // Process each line
+        for (String line : lines) {
+            if (line.contains("^enableThenGoto")) {
+                Matcher matcher = pattern.matcher(line);
+                if (matcher.find()) {
+                    // Extract the letter from the line (assuming it's between ~ and " in the same line)
+                    String letterRegex = "~([A-D])";
+                    Pattern letterPattern = Pattern.compile(letterRegex);
+                    Matcher letterMatcher = letterPattern.matcher(line);
+                    if (letterMatcher.find()) {
+                        String letter = letterMatcher.group(1);
+                        // Put the result in the map
+                        result.put(letter, matcher.group(1));
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
 }
