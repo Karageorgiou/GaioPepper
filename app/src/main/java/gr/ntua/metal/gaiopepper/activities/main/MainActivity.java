@@ -13,6 +13,7 @@ import android.view.View;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.util.Pair;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
@@ -35,7 +36,6 @@ import com.aldebaran.qi.sdk.object.conversation.SpeechEngine;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -46,7 +46,9 @@ import gr.ntua.metal.gaiopepper.activities.settings.SettingsActivity;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
 import gr.ntua.metal.gaiopepper.util.AutonomousAbilitiesManager;
 import gr.ntua.metal.gaiopepper.util.ChatManager;
-import gr.ntua.metal.gaiopepper.util.TimingManager;
+import gr.ntua.metal.gaiopepper.util.QuizManager;
+import gr.ntua.metal.gaiopepper.util.StringUtility;
+import gr.ntua.metal.gaiopepper.util.TimingUtility;
 
 public class MainActivity extends RobotActivity
         implements
@@ -59,6 +61,7 @@ public class MainActivity extends RobotActivity
         Chatbot.OnAutonomousReactionChangedListener {
     private static final String TAG = "Main Activity";
     public final ChatManager chatManager = new ChatManager(this);
+    public final QuizManager quizManager = new QuizManager(this);
 
     private AudioManager audioManager;
 
@@ -76,13 +79,12 @@ public class MainActivity extends RobotActivity
     protected List<MessageItem> messageItemList;
     protected MessageAdapter messageAdapter;
 
-    public TimingManager timingManager;
+    public TimingUtility timingManager;
 
 
     public QiContext getQiContext() {
         return this.qiContext;
     }
-
 
 
     /**
@@ -94,7 +96,7 @@ public class MainActivity extends RobotActivity
         Log.i(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
-        timingManager = new TimingManager();
+        timingManager = new TimingUtility();
 
         PreferenceManager.getDefaultSharedPreferences(this).edit().clear().commit();
         PreferenceManager.setDefaultValues(this, R.xml.preferences_root, true);
@@ -102,14 +104,9 @@ public class MainActivity extends RobotActivity
         chatFragment = new ChatFragment();
         quizFragment = new QuizFragment();
 
-        chatManager.bookmarksLibrary = new ArrayList<>();
         messageItemList = new ArrayList<>();
         messageAdapter = new MessageAdapter(this, messageItemList);
 
-        chatManager.questionsEN = new HashMap<>();
-        chatManager.questionsGR = new HashMap<>();
-        chatManager.answersEN = new HashMap<>();
-        chatManager.answersGR = new HashMap<>();
 
         QiSDK.register(this, this);
         this.setContentView(R.layout.activity_main);
@@ -123,8 +120,6 @@ public class MainActivity extends RobotActivity
 
         findViews();
         addListeners();
-
-
 
 
     }
@@ -308,16 +303,24 @@ public class MainActivity extends RobotActivity
         Log.i(TAG, "[CHATBOT] Bookmark " + bookmark.getName() + " reached.");
         switch (bookmark.getName()) {
             case "BAUXITE":
-                chatFragment.updateRecyclerView(LayoutRobotImage, R.drawable.red_bauxite_pissoliths);
+                chatManager.setContent(chatFragment, new Pair<>(LayoutRobotImage, R.drawable.red_bauxite_pissoliths));
                 break;
             case "PISOLITH":
-                chatFragment.updateRecyclerView(LayoutRobotImage, R.drawable.white_bauxite);
+                chatManager.setContent(chatFragment, new Pair<>(LayoutRobotImage, R.drawable.white_bauxite));
                 break;
             case "BAUXITE.3":
-                chatFragment.updateRecyclerView(LayoutRobotImage, R.drawable.aluminium);
+                chatManager.setContent(chatFragment, new Pair<>(LayoutRobotImage, R.drawable.aluminium));
                 break;
             default:
                 break;
+        }
+        if (bookmark.getName().contains("QUESTION.")) {
+            String content = bookmark.getTopic().getContent();
+            String name = bookmark.getName();
+            String proposalContent = StringUtility.extractProposal(name, content);
+            runOnUiThread(() -> {
+                quizManager.setContent(quizFragment, name, proposalContent);
+            });
         }
         chatManager.setLastBookmark(bookmark);
     }
@@ -335,23 +338,7 @@ public class MainActivity extends RobotActivity
         String sayingText = phrase.getText();
         if (!sayingText.isEmpty()) {
             Log.i(TAG, "[SPEECH ENGINE]/[CHAT] Pepper Reply: " + sayingText);
-            chatFragment.updateRecyclerView(LayoutRobot, sayingText);
-
-            if (chatManager.getLastBookmark() != null) {
-                chatManager.getLastBookmark().async().getName().thenConsume(value -> {
-                    if (value.hasError()) {
-                        Log.i(TAG, "[lastBookmark.async().getName()]: " + value.getErrorMessage());
-                    } else {
-                        if (value.get().contains("QUESTION.")) {
-                            if (quizFragment != null /*&& quizFragment.isVisible()*/) {
-                                quizFragment.setQuestion(phrase.getText());
-                            }
-                        }
-                    }
-                });
-            }
-
-
+            chatManager.setContent(chatFragment, new Pair<>(LayoutRobot, sayingText));
         }
     }
 
@@ -366,7 +353,8 @@ public class MainActivity extends RobotActivity
         String heardText = heardPhrase.getText();
         if (!heardText.isEmpty()) {
             Log.i(TAG, "[CHAT] Heard phrase: " + heardPhrase.getText());
-            chatFragment.updateRecyclerView(LayoutUser, heardText);
+            chatManager.setContent(chatFragment, new Pair<>(LayoutUser, heardText));
+
         }
     }
 
@@ -397,7 +385,7 @@ public class MainActivity extends RobotActivity
                         if (!chatManager.chat.getSaying().getText().isEmpty()) {
                             Log.d(TAG, "[autonomousReaction] [NOT HANDLED] [chat.getSaying]: " + chatManager.chat.getSaying().getText());
                         } else {
-                            Log.d(TAG, "[autonomousReaction] [RUNNING NOW] " );
+                            Log.d(TAG, "[autonomousReaction] [RUNNING NOW] ");
                             chatbotReaction.async().runWith(chatManager.speechEngine);
                             return;
                         }
@@ -462,18 +450,18 @@ public class MainActivity extends RobotActivity
 
     public void changeFragment(Fragment newFragment) {
 
-            if (newFragment instanceof QuizFragment) {
-                runOnUiThread(() -> {
-                    fabQuiz.setImageResource(R.drawable.icons8_chat_100);
-                });
-            } else if (newFragment instanceof ChatFragment) {
-                runOnUiThread(() -> {
-                            fabQuiz.setImageResource(R.drawable.icons8_quiz_100);
-                        });
-                Bundle bundle = new Bundle();
-                bundle.putString(getString(R.string.CONVERSATION_MODE_KEY), PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_MODE_KEY), "NONE_VALUE"));
-                newFragment.setArguments(bundle);
-            }
+        if (newFragment instanceof QuizFragment) {
+            runOnUiThread(() -> {
+                fabQuiz.setImageResource(R.drawable.icons8_chat_100);
+            });
+        } else if (newFragment instanceof ChatFragment) {
+            runOnUiThread(() -> {
+                fabQuiz.setImageResource(R.drawable.icons8_quiz_100);
+            });
+            Bundle bundle = new Bundle();
+            bundle.putString(getString(R.string.CONVERSATION_MODE_KEY), PreferenceManager.getDefaultSharedPreferences(this).getString(getString(R.string.CONVERSATION_MODE_KEY), "NONE_VALUE"));
+            newFragment.setArguments(bundle);
+        }
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.chat_container, newFragment);
         transaction.commit();

@@ -3,6 +3,9 @@ package gr.ntua.metal.gaiopepper.util;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.core.util.Pair;
+import androidx.fragment.app.Fragment;
+
 import com.aldebaran.qi.Function;
 import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
@@ -23,6 +26,7 @@ import com.aldebaran.qi.sdk.object.locale.Language;
 import com.aldebaran.qi.sdk.object.locale.Locale;
 import com.aldebaran.qi.sdk.object.locale.Region;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,12 +34,12 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import gr.ntua.metal.gaiopepper.R;
+import gr.ntua.metal.gaiopepper.activities.main.ChatFragment;
 import gr.ntua.metal.gaiopepper.activities.main.MainActivity;
 
-public class ChatManager {
+public class ChatManager implements IManager{
     private static final String TAG = "Chat Manager";
     private Bookmark lastBookmark = null;
-
 
     private final MainActivity mainActivity;
     public final Locale localeGR;
@@ -44,10 +48,6 @@ public class ChatManager {
     public List<Topic> topicListEN;
     public Map<String, Bookmark> bookmarksGR;
     public Map<String, Bookmark> bookmarksEN;
-    public Map<String, Bookmark> questionsEN;
-    public Map<String, Bookmark> questionsGR;
-    public Map<String, Bookmark> answersEN;
-    public Map<String, Bookmark> answersGR;
     public List<Map<String, Bookmark>> bookmarksLibrary;
     public SpeechEngine speechEngine;
     public QiChatbot chatbot;
@@ -58,6 +58,9 @@ public class ChatManager {
         this.mainActivity = mainActivity;
         this.localeGR = new Locale(Language.GREEK, Region.GREECE);
         this.localeEN = new Locale(Language.ENGLISH, Region.UNITED_STATES);
+
+        this.bookmarksLibrary = new ArrayList<>();
+
     }
 
     public void buildTopics() {
@@ -98,7 +101,7 @@ public class ChatManager {
     }
 
     public void registerBookmarksToLibrary(Language language) {
-        String languageCode = StringUtility.getLanguageCode(language);
+        String languageCode = StringUtility.extractLanguageCode(language);
         Object foundBookmarks = StringUtility.checkVariablesForSubstring(this, "bookmarks" + languageCode);
         if (foundBookmarks != null) {
             Map<String, Bookmark> tempBookmarks = (Map<String, Bookmark>) foundBookmarks;
@@ -106,7 +109,7 @@ public class ChatManager {
                 bookmarksLibrary.add(tempBookmarks);
             }
 
-            Object foundQuestions = StringUtility.checkVariablesForSubstring(this, "questions" + languageCode);
+            Object foundQuestions = StringUtility.checkVariablesForSubstring(mainActivity.quizManager, "questions" + languageCode);
             if (foundQuestions != null) {
                 Map<String, Bookmark> tempQuestions = (Map<String, Bookmark>) foundQuestions;
                 for (Map.Entry<String, Bookmark> entry : tempBookmarks.entrySet()) {
@@ -118,7 +121,7 @@ public class ChatManager {
                     }
                 }
 
-                Object foundAnswers = StringUtility.checkVariablesForSubstring(this, "answers" + languageCode);
+                Object foundAnswers = StringUtility.checkVariablesForSubstring(mainActivity.quizManager, "answers" + languageCode);
                 if (foundAnswers != null) {
                     Map<String, Bookmark> tempAnswers = (Map<String, Bookmark>) foundAnswers;
                     for (Map.Entry<String, Bookmark> entry : tempBookmarks.entrySet()) {
@@ -295,8 +298,6 @@ public class ChatManager {
                                 }
                             }
                         }
-
-
                     }
                 });
             }
@@ -309,6 +310,21 @@ public class ChatManager {
 
     public void setLastBookmark(Bookmark bookmark) {
         this.lastBookmark = bookmark;
+    }
+
+    public void setContent(Fragment fragment, Pair<Integer, Object> content) {
+        if (content == null) {
+            Log.e(TAG, "Content is NULL");
+            return;
+        }
+        if (fragment instanceof ChatFragment) {
+            if(content.second instanceof Integer) {
+                ((ChatFragment) fragment).updateRecyclerView(content.first, (Integer) content.second);
+            }
+            if (content.second instanceof String) {
+                ((ChatFragment) fragment).updateRecyclerView(content.first, (String) content.second);
+            }
+        }
     }
 
 

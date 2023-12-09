@@ -41,15 +41,18 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         mainActivity = (MainActivity) requireActivity();
 
-        Bookmark questionBookmark = mainActivity.chatManager.questionsEN.get("QUESTION.1");
+        Bookmark questionBookmark = mainActivity.quizManager.questionsEN.get("QUESTION.2");
         assert questionBookmark != null : "questionBookmark is null";
+
         mainActivity.chatManager.chatbot.async().goToBookmark(questionBookmark, AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
+
 
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView: ");
+
 
         return inflater.inflate(R.layout.quiz_view, container, false);
     }
@@ -62,24 +65,19 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
         findViews();
         addListeners();
 
-        /*for (Bookmark bookmark : mainActivity.questionsEN.values()) {
-            bookmark.async().getName().thenConsume(value -> {
-                Log.d(TAG, "BOOKMARK: " + value.get());
-            });
-        }*/
 
 
 
-        Bookmark answerBookmark1 = mainActivity.chatManager.answersEN.get("ANSWER.1.A");
+        //todo: fix stuff here
+
+        Bookmark answerBookmark1 = mainActivity.quizManager.answersEN.get("ANSWER.1.A");
         assert answerBookmark1 != null : "answerBookmark1 is null";
-        Bookmark answerBookmark2 = mainActivity.chatManager.answersEN.get("ANSWER.1.B");
+        Bookmark answerBookmark2 = mainActivity.quizManager.answersEN.get("ANSWER.1.B");
         assert answerBookmark2 != null : "answerBookmark2 is null";
-        Bookmark answerBookmark3 = mainActivity.chatManager.answersEN.get("ANSWER.1.C");
+        Bookmark answerBookmark3 = mainActivity.quizManager.answersEN.get("ANSWER.1.C");
         assert answerBookmark3 != null : "answerBookmark3 is null";
-        Bookmark answerBookmark4 = mainActivity.chatManager.answersEN.get("ANSWER.1.D");
+        Bookmark answerBookmark4 = mainActivity.quizManager.answersEN.get("ANSWER.1.D");
         assert answerBookmark4 != null : "answerBookmark4 is null";
-
-
 
 
     }
@@ -96,18 +94,18 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
     public void onClick(View view) {
         int viewID = view.getId();
         if (viewID == R.id.btn_answer1) {
-            Log.d(TAG, "Touched button: " + view.toString());
+            Log.d(TAG, "Touched button1 ");
         } else if (viewID == R.id.btn_answer2) {
-            Log.d(TAG, "Touched button: " + view.toString());
+            Log.d(TAG, "Touched button2 ");
 
         } else if (viewID == R.id.btn_answer3) {
-            Log.d(TAG, "Touched button: " + view.toString());
+            Log.d(TAG, "Touched button3: ");
 
         } else if (viewID == R.id.btn_answer4) {
-            Log.d(TAG, "Touched button: " + view.toString());
+            Log.d(TAG, "Touched button4 ");
 
         } else if (viewID == R.id.btn_close) {
-            Log.d(TAG, "Touched button: " + view.toString());
+            Log.d(TAG, "Touched button close ");
             mainActivity.changeFragment(mainActivity.chatFragment);
         }
     }
@@ -143,10 +141,28 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
         buttonClose.setOnClickListener(this);
     }
 
-    protected void setQuestion(String question) {
+    public void setQuestion(String question) {
         textViewQuestion.setText(question);
     }
 
+    public void setAnswer(String answerID, String answer) {
+
+        switch (answerID) {
+            case "A":
+                buttonAnswer1.setText(answer);
+                break;
+            case "B":
+                buttonAnswer2.setText(answer);
+                break;
+            case "C":
+                buttonAnswer3.setText(answer);
+                break;
+            case "D":
+                buttonAnswer4.setText(answer);
+                break;
+
+        }
+    }
 
 
 }

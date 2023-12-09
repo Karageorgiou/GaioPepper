@@ -5,10 +5,13 @@ import android.util.Log;
 import com.aldebaran.qi.sdk.object.locale.Language;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class StringUtility {
     private static final String TAG = "String Utility";
-
 
     public static String formatMessage(String message) {
         String regex = "\\\\.*?\\\\";
@@ -37,22 +40,65 @@ public class StringUtility {
         }
     }
 
-    public static String getLanguageCode(Language language) {
+    public static String extractLanguageCode(Language language) {
         String languageName = language.name();
-        //Log.d(TAG,"LANG: " + language);
-        // Check if the username is not null and has at least two characters
         if (languageName != null && languageName.length() >= 2) {
             // Extract the first two characters and capitalize them
             String shortenedAndCapitalized = languageName.substring(0, 2).toUpperCase();
-            //Log.d(TAG,"CODE: " + shortenedAndCapitalized);
             return shortenedAndCapitalized;
         } else {
-            // Return the original username if it doesn't meet the criteria
             return languageName;
         }
     }
 
-    public static Object checkVariablesForSubstring(ChatManager activity, String targetSubstring) {
+    public static String extractQuestionAfterBookmark(String name, String content) {
+        Pattern pattern = Pattern.compile(name + "([^?]+\\?)");
+        Matcher matcher = pattern.matcher(content);
+
+        while (matcher.find()) {
+            String result = matcher.group(1);
+            return result != null ? result.trim() : null;
+        }
+        return null;
+    }
+
+    public static Map<String, String> extractAnswersForQuestion(String name, String content) {
+        Map<String, String> answersMap = new HashMap<>();
+        String questionNumber = extractNumberAfterDot(name);
+
+        Pattern pattern = Pattern.compile("u1:\\(\\[~([A-D]) \"(.*?)\"\\]\\) %ANSWER\\." + questionNumber + "\\.[A-D]");
+        Matcher matcher = pattern.matcher(content);
+
+        while (matcher.find()) {
+            String answerLetter = matcher.group(1);
+            String answerText = matcher.group(2);
+            //Log.d(TAG, "Letter: " + answerLetter + ", Found: " + answerText);
+            answersMap.put(answerLetter, answerText);
+        }
+        return answersMap.isEmpty() ? null : answersMap;
+    }
+
+    private static String extractNumberAfterDot(String input) {
+        Pattern pattern = Pattern.compile("\\.(\\d+)$");
+        Matcher matcher = pattern.matcher(input);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
+    }
+
+    public static String extractProposal(String bookmarkName, String content) {
+        String regex = "(proposal: %" + bookmarkName + ".+?)(?:proposal:|%$|$)";
+        Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(content);
+
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        return null;
+    }
+
+    public static Object checkVariablesForSubstring(IManager activity, String targetSubstring) {
         Field[] fields = activity.getClass().getDeclaredFields();
         for (Field field : fields) {
             String fieldName = field.getName();

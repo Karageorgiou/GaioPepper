@@ -19,6 +19,7 @@ import android.widget.RelativeLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.util.Pair;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -33,7 +34,6 @@ import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
 import gr.ntua.metal.gaiopepper.util.ImageManager;
 import gr.ntua.metal.gaiopepper.util.StringUtility;
-import gr.ntua.metal.gaiopepper.util.TimingManager;
 
 public class ChatFragment extends Fragment implements View.OnClickListener {
     private static final String TAG = "Chat Fragment";
@@ -108,7 +108,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
                 Phrase userPhrase = new Phrase(message);
                 Log.d(TAG, "[onClick] User message: " + userPhrase.getText());
                 try {
-                    updateRecyclerView(LayoutUser, message);
+                    mainActivity.chatManager.setContent(this, new Pair<>(LayoutUser, message));
                     mainActivity.chatManager.replyTo(userPhrase, mainActivity.chatManager.localeEN);
                     textInputEditText.getText().clear();
                 } catch (Exception e) {
@@ -174,7 +174,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    protected void updateRecyclerView(int messageLayout, int image) {
+    public void updateRecyclerView(int messageLayout, int image) {
         mainActivity.timingManager.checkForDuplicates(image, purged -> {
             Log.d(TAG, "Updating recyclerView");
             if (purged) {
@@ -207,7 +207,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
         });
     }
 
-    protected void updateRecyclerView(int messageLayout, String message) {
+    public void updateRecyclerView(int messageLayout, String message) {
         mainActivity.timingManager.checkForDuplicates(message, purged -> {
             Log.d(TAG, "Updating recyclerView");
             if (purged) {
