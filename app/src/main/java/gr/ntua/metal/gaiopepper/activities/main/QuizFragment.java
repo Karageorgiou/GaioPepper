@@ -37,13 +37,12 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.i(TAG, "onCreate");
+        //Log.i(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         mainActivity = (MainActivity) requireActivity();
 
-        Bookmark questionBookmark = mainActivity.quizManager.questionsEN.get("QUESTION.2");
+        Bookmark questionBookmark = mainActivity.quizManager.getRandomQuestionBookmark(mainActivity.quizManager.questionsEN);
         assert questionBookmark != null : "questionBookmark is null";
-
         mainActivity.chatManager.chatbot.async().goToBookmark(questionBookmark, AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
 
 
@@ -51,7 +50,7 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateView: ");
+        //Log.d(TAG, "onCreateView: ");
 
 
         return inflater.inflate(R.layout.quiz_view, container, false);
@@ -59,7 +58,7 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        Log.d(TAG, "onViewCreated: ");
+        //Log.d(TAG, "onViewCreated: ");
         super.onViewCreated(view, savedInstanceState);
 
         findViews();
@@ -84,7 +83,7 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
 
     @Override
     public void onStart() {
-        Log.d(TAG, "onStart: ");
+        //Log.d(TAG, "onStart: ");
         super.onStart();
 
 
@@ -95,15 +94,16 @@ public class QuizFragment extends Fragment implements View.OnClickListener {
         int viewID = view.getId();
         if (viewID == R.id.btn_answer1) {
             Log.d(TAG, "Touched button1 ");
+            mainActivity.quizManager.answerToQuestion("A", mainActivity.chatManager.getCurrentLocale());
         } else if (viewID == R.id.btn_answer2) {
             Log.d(TAG, "Touched button2 ");
-
+            mainActivity.quizManager.answerToQuestion("B", mainActivity.chatManager.getCurrentLocale());
         } else if (viewID == R.id.btn_answer3) {
             Log.d(TAG, "Touched button3: ");
-
+            mainActivity.quizManager.answerToQuestion("C", mainActivity.chatManager.getCurrentLocale());
         } else if (viewID == R.id.btn_answer4) {
             Log.d(TAG, "Touched button4 ");
-
+            mainActivity.quizManager.answerToQuestion("D", mainActivity.chatManager.getCurrentLocale());
         } else if (viewID == R.id.btn_close) {
             Log.d(TAG, "Touched button close ");
             mainActivity.changeFragment(mainActivity.chatFragment);

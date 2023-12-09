@@ -5,6 +5,7 @@ import android.widget.Toast;
 
 import androidx.core.util.Pair;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 
 import com.aldebaran.qi.Function;
 import com.aldebaran.qi.Future;
@@ -12,6 +13,7 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.builder.ChatBuilder;
 import com.aldebaran.qi.sdk.builder.QiChatbotBuilder;
 import com.aldebaran.qi.sdk.builder.TopicBuilder;
+import com.aldebaran.qi.sdk.object.conversation.AutonomousReaction;
 import com.aldebaran.qi.sdk.object.conversation.AutonomousReactionImportance;
 import com.aldebaran.qi.sdk.object.conversation.AutonomousReactionValidity;
 import com.aldebaran.qi.sdk.object.conversation.Bookmark;
@@ -31,7 +33,9 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.activities.main.ChatFragment;
@@ -42,8 +46,9 @@ public class ChatManager implements IManager{
     private Bookmark lastBookmark = null;
 
     private final MainActivity mainActivity;
-    public final Locale localeGR;
-    public final Locale localeEN;
+    private final Locale localeGR;
+    private final Locale localeEN;
+    private Locale currentLocale;
     public List<Topic> topicListGR;
     public List<Topic> topicListEN;
     public Map<String, Bookmark> bookmarksGR;
@@ -52,7 +57,7 @@ public class ChatManager implements IManager{
     public SpeechEngine speechEngine;
     public QiChatbot chatbot;
     public Chat chat;
-    public Future<Void> chatFuture;
+    public volatile Future<Void> chatFuture;
 
     public ChatManager(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
@@ -64,23 +69,27 @@ public class ChatManager implements IManager{
     }
 
     public void buildTopics() {
-        topicListGR = buildTopicList(new LinkedList<Integer>(
-                Arrays.asList(
-                        R.raw.lexicon_gr,
-                        R.raw.introduction_gr,
-                        R.raw.bauxite_gr
-                )
-        ), localeGR);
-        topicListEN = buildTopicList(new LinkedList<Integer>(
-                Arrays.asList(
-                        R.raw.lexicon_en,
-                        R.raw.introduction_en,
-                        R.raw.bauxite_en,
-                        R.raw.quiz_en
-                )
-        ), localeEN);
-
-
+        if (topicListGR == null) {
+            Log.i(TAG, "Building topic GR");
+            topicListGR = buildTopicList(new LinkedList<>(
+                    Arrays.asList(
+                            R.raw.lexicon_gr,
+                            R.raw.introduction_gr,
+                            R.raw.bauxite_gr
+                    )
+            ), localeGR);
+        }
+        if (topicListEN == null) {
+            Log.i(TAG, "Building topic EN");
+            topicListEN = buildTopicList(new LinkedList<>(
+                    Arrays.asList(
+                            R.raw.lexicon_en,
+                            R.raw.introduction_en,
+                            R.raw.bauxite_en,
+                            R.raw.quiz_en
+                    )
+            ), localeEN);
+        }
     }
 
     public List<Topic> buildTopicList(List<Integer> topics, Locale locale) {
@@ -114,7 +123,7 @@ public class ChatManager implements IManager{
                 Map<String, Bookmark> tempQuestions = (Map<String, Bookmark>) foundQuestions;
                 for (Map.Entry<String, Bookmark> entry : tempBookmarks.entrySet()) {
                     if (entry.getKey().contains("QUESTION.")) {
-                        Log.d(TAG, "Found Bookmark with name: " + entry.getKey());
+                        //Log.d(TAG, "Found Bookmark with name: " + entry.getKey());
                         if (!tempQuestions.containsKey(entry.getKey())) {
                             tempQuestions.put(entry.getKey(), entry.getValue());
                         }
@@ -251,7 +260,8 @@ public class ChatManager implements IManager{
         return chat;
     }
 
-    public void runChat(Chat chat, Locale locale) {
+    public void runChat(Chat chat) {
+        Log.i(TAG, "[runChat]: Trying to run chat...");
         if (chat == null) {
             Log.e(TAG, "[runChat]: chat is null.");
             return;
@@ -260,9 +270,14 @@ public class ChatManager implements IManager{
 
         chatFuture.thenConsume(future -> {
             if (future.hasError()) {
-                Log.e(TAG, "Chat finished with error: " + future.getErrorMessage());
+                Log.e(TAG, "[runChat]: Chat finished with error: " + future.getErrorMessage());
+                chatFuture = null;
+            } else if(future.isCancelled()) {
+                Log.i(TAG, "[runChat]: Chat canceled successfully. ");
+                chatFuture = null;
             } else {
-                Log.e(TAG, "Chat finished: " + future.get().toString());
+                Log.e(TAG, "[runChat]: Chat finished: " + future.get().toString());
+                chatFuture = null;
             }
         });
     }
@@ -272,12 +287,20 @@ public class ChatManager implements IManager{
         speechEngine.addOnSayingChangedListener(mainActivity);
     }
 
-    public void replyTo(Phrase userPhrase, Locale locale) {
+    private boolean replyTo(Phrase userPhrase, Locale locale) {
+        AtomicBoolean error = new AtomicBoolean(false);
         Future<ReplyReaction> replyToFuture = chatbot.async().replyTo(userPhrase, locale);
         replyToFuture.thenConsume(replyReactionFuture -> {
             if (replyReactionFuture.hasError()) {
                 Log.e(TAG, "Reply Reaction Future [ERROR]: " + replyReactionFuture.getErrorMessage());
+                error.set(true);
             } else {
+                if (chatFuture != null) {
+                    chatFuture.requestCancellation();
+                    while (true) {
+                        if (chatFuture == null) break;
+                    }
+                }
                 ReplyReaction replyReaction = replyReactionFuture.get();
                 Future<ChatbotReaction> getChatbotReactionFuture = replyReaction.async().getChatbotReaction();
                 getChatbotReactionFuture.thenConsume(chatbotReactionFuture -> {
@@ -285,16 +308,22 @@ public class ChatManager implements IManager{
                         Log.e(TAG, "Chatbot Reaction Future [ERROR]: " + chatbotReactionFuture.getErrorMessage());
                     } else {
                         ChatbotReaction chatbotReaction = chatbotReactionFuture.get();
-
                         if (speechEngine.getSaying().getText().isEmpty()) {
                             if (chat != null) {
                                 if (chat.getSaying().getText().isEmpty()) {
-                                    Future<Void> runWithFuture = chatbotReaction.async().runWith(speechEngine);
-                                    runWithFuture.thenConsume(future -> {
-                                        if (future.hasError()) {
-                                            Log.e(TAG, "runWith Future [ERROR]: " + future.getErrorMessage());
-                                        }
-                                    });
+                                    if(!chat.getListening()) {
+                                        Future<Void> runWithFuture = chatbotReaction.async().runWith(speechEngine);
+                                        runWithFuture.thenConsume(future -> {
+                                            if (future.hasError()) {
+                                                Log.e(TAG, "runWith Future [ERROR]: " + future.getErrorMessage());
+                                            } else {
+                                                String conversationMode = PreferenceManager.getDefaultSharedPreferences(mainActivity).getString(mainActivity.getString(R.string.CONVERSATION_MODE_KEY), "NONE_VALUE");
+                                                if ((Objects.equals(conversationMode, mainActivity.getString(R.string.ORAL_CONVERSATION_VALUE))) && mainActivity.chatManager.chatFuture == null) {
+                                                    mainActivity.chatManager.runChat(mainActivity.chatManager.chat);
+                                                }
+                                            }
+                                        });
+                                    }
                                 }
                             }
                         }
@@ -302,6 +331,22 @@ public class ChatManager implements IManager{
                 });
             }
         });
+        return error.get();
+    }
+
+    public void replyTo(String message, Locale locale) {
+        Phrase userPhrase = new Phrase(message);
+        Log.i(TAG, "[CHATBOT] [replyTo] User message: " + userPhrase.getText());
+        try {
+            if (!replyTo(userPhrase, locale)) {
+                String conversationMode = PreferenceManager.getDefaultSharedPreferences(mainActivity).getString(mainActivity.getString(R.string.CONVERSATION_MODE_KEY), "NONE_VALUE");
+                if ((Objects.equals(conversationMode, mainActivity.getString(R.string.ORAL_CONVERSATION_VALUE))) && mainActivity.chatManager.chatFuture == null) {
+                    mainActivity.chatManager.runChat(mainActivity.chatManager.chat);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public Bookmark getLastBookmark() {
@@ -325,6 +370,22 @@ public class ChatManager implements IManager{
                 ((ChatFragment) fragment).updateRecyclerView(content.first, (String) content.second);
             }
         }
+    }
+
+    public void setCurrentLocale(String conversationLanguage) {
+        if (Objects.equals(conversationLanguage, mainActivity.getString(R.string.GREEK))) {
+            currentLocale = localeGR;
+        } else if (Objects.equals(conversationLanguage, mainActivity.getString(R.string.ENGLISH))) {
+            currentLocale = localeEN;
+        } else {
+            Log.e(TAG, "Requested conversation language is not installed.");
+            return;
+        }
+        Log.i(TAG, "Current locale set to: " + currentLocale.getLanguage());
+    }
+
+    public Locale getCurrentLocale() {
+        return currentLocale;
     }
 
 

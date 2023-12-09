@@ -3,12 +3,19 @@ topic: ~quiz_en()
 
 proposal: %QUESTION.1  Which is a physical feature of Bauxite that helps us identify the mineral?
     u1:([~A "Bauxite often exhibits a pisolitic characteristics."]) %ANSWER.1.A
-    u1:([~B "Bauxite often exhibits a analithic characteristics."]) %ANSWER.1.B
-    u1:([~C "Bauxite often exhibits a mesolithic characteristics."]) %ANSWER.1.C
-    u1:([~D "Bauxite often shines when exposed to UV radiation."]) %ANSWER.1.D
+        Correctoo ^enableThenGoto(CORRECT)
+    u1:([~B "Bauxite often exhibits a analithic characteristics."]) %ANSWER.1.B ^enableThenGoto(FALSE)
+    u1:([~C "Bauxite often exhibits a mesolithic characteristics."]) %ANSWER.1.C ^enableThenGoto(FALSE)
+    u1:([~D "Bauxite often shines when exposed to UV radiation."]) %ANSWER.1.D ^enableThenGoto(FALSE)
 
 proposal: %QUESTION.2  What does sulfur smell like?
     u1:([~A "Rotten eggs - Sulfur often has a stinky, egg-like odor."]) %ANSWER.2.A
-    u1:([~B "Sweet flowers - Some describe sulfur as having a floral scent."]) %ANSWER.2.B
-    u1:([~C "Fresh rain - Sulfur can give off a rain-like smell."]) %ANSWER.2.C
-    u1:([~D "Juicy fruit - Sulfur does have a fruity aroma."]) %ANSWER.2.D
+        Correctoo ^enableThenGoto(CORRECT)
+    u1:([~B "Sweet flowers - Some describe sulfur as having a floral scent."]) %ANSWER.2.B ^enableThenGoto(FALSE)
+    u1:([~C "Fresh rain - Sulfur can give off a rain-like smell."]) %ANSWER.2.C ^enableThenGoto(FALSE)
+    u1:([~D "Juicy fruit - Sulfur does have a fruity aroma."]) %ANSWER.2.D ^enableThenGoto(FALSE)
+
+
+proposal: %CORRECT This is correct!
+
+proposal: %FALSE ^rand["This is false." "This is not correct"]

@@ -103,7 +103,7 @@ public class StringUtility {
         for (Field field : fields) {
             String fieldName = field.getName();
             if (fieldName.contains(targetSubstring)) {
-                Log.d(TAG, "Found variable with name: " + fieldName);
+                //Log.d(TAG, "Found variable with name: " + fieldName);
                 try {
                     Object value = field.get(activity);
                     return value;
@@ -114,4 +114,5 @@ public class StringUtility {
         }
         return null;
     }
+
 }

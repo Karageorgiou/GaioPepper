@@ -126,7 +126,7 @@
                     android:layout_marginVertical="10dp"
                     android:layout_weight="1"
                     android:background="@drawable/rounded_corners_yellow"
-                    android:text=" Ο πισολιθικός του χαρακτήρας που παρεχει πισολιθικες ιδιοτητες με σβολους χρωματικης μορφης." />
+                    android:text=" Ο πισολιθικός του χαρακτήρας ." />
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btn_answer4"

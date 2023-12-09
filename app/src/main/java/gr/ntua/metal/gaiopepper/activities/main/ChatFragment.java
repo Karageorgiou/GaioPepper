@@ -58,7 +58,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.i(TAG, "onCreate");
+        //Log.i(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         mainActivity = (MainActivity) requireActivity();
 
@@ -67,7 +67,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateView: ");
+        //Log.d(TAG, "onCreateView: ");
 
 
 
@@ -77,7 +77,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        Log.d(TAG, "onViewCreated: ");
+        //Log.d(TAG, "onViewCreated: ");
         super.onViewCreated(view, savedInstanceState);
 
         findViews();
@@ -94,7 +94,10 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
         conversationMode = getArguments().getString(getString(R.string.CONVERSATION_MODE_KEY));
         applyPreferences();
 
+        recyclerView.scrollToPosition(mainActivity.messageItemList.size()-1);
+
     }
+
 
     @Override
     public void onClick(View view) {
@@ -105,15 +108,9 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
         } else if (viewID == R.id.btn_send) {
             String message = Objects.requireNonNull(textInputEditText.getText()).toString();
             if (!message.isEmpty()) {
-                Phrase userPhrase = new Phrase(message);
-                Log.d(TAG, "[onClick] User message: " + userPhrase.getText());
-                try {
-                    mainActivity.chatManager.setContent(this, new Pair<>(LayoutUser, message));
-                    mainActivity.chatManager.replyTo(userPhrase, mainActivity.chatManager.localeEN);
-                    textInputEditText.getText().clear();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                mainActivity.chatManager.setContent(this, new Pair<>(LayoutUser, message));
+                mainActivity.chatManager.replyTo(message, mainActivity.chatManager.getCurrentLocale());
+                textInputEditText.getText().clear();
             }
         }
     }
@@ -176,7 +173,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
 
     public void updateRecyclerView(int messageLayout, int image) {
         mainActivity.timingManager.checkForDuplicates(image, purged -> {
-            Log.d(TAG, "Updating recyclerView");
+            //Log.d(TAG, "Updating recyclerView");
             if (purged) {
                 return;
             }
@@ -209,7 +206,7 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
 
     public void updateRecyclerView(int messageLayout, String message) {
         mainActivity.timingManager.checkForDuplicates(message, purged -> {
-            Log.d(TAG, "Updating recyclerView");
+            //Log.d(TAG, "Updating recyclerView");
             if (purged) {
                 return;
             }

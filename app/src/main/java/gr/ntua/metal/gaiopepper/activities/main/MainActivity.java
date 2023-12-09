@@ -18,6 +18,8 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
 
+import com.aldebaran.qi.Consumer;
+import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.QiSDK;
 import com.aldebaran.qi.sdk.RobotLifecycleCallbacks;
@@ -33,6 +35,7 @@ import com.aldebaran.qi.sdk.object.conversation.ChatbotReactionHandlingStatus;
 import com.aldebaran.qi.sdk.object.conversation.Phrase;
 import com.aldebaran.qi.sdk.object.conversation.QiChatbot;
 import com.aldebaran.qi.sdk.object.conversation.SpeechEngine;
+import com.aldebaran.qi.sdk.object.conversation.Topic;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
@@ -229,15 +232,18 @@ public class MainActivity extends RobotActivity
             });
 
         }
+
+        chatManager.setCurrentLocale(conversationLanguage);
+
         if (Objects.equals(conversationLanguage, getString(R.string.GREEK))) {
             try {
-                chatManager.chatbot = chatManager.buildQiChatbot(chatManager.topicListGR, chatManager.localeGR);
+                chatManager.chatbot = chatManager.buildQiChatbot(chatManager.topicListGR, chatManager.getCurrentLocale());
             } catch (ExecutionException e) {
                 e.printStackTrace();
             }
         } else if (Objects.equals(conversationLanguage, getString(R.string.ENGLISH))) {
             try {
-                chatManager.chatbot = chatManager.buildQiChatbot(chatManager.topicListEN, chatManager.localeEN);
+                chatManager.chatbot = chatManager.buildQiChatbot(chatManager.topicListEN, chatManager.getCurrentLocale());
             } catch (ExecutionException e) {
                 e.printStackTrace();
             }
@@ -253,14 +259,14 @@ public class MainActivity extends RobotActivity
                 chatFragment.hideTextInput();
             });
             if (Objects.equals(conversationLanguage, getString(R.string.GREEK))) {
-                chatManager.chat = chatManager.buildChat(chatManager.chatbot, chatManager.localeGR);
-                chatManager.runChat(chatManager.chat, chatManager.localeGR);
+                chatManager.chat = chatManager.buildChat(chatManager.chatbot, chatManager.getCurrentLocale());
+                chatManager.runChat(chatManager.chat);
                 if (chatManager.getLastBookmark() == null) {
                     //chatbot.async().goToBookmark(bookmarksGR.get("INTRO"), AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
                 }
             } else if (Objects.equals(conversationLanguage, getString(R.string.ENGLISH))) {
-                chatManager.chat = chatManager.buildChat(chatManager.chatbot, chatManager.localeEN);
-                chatManager.runChat(chatManager.chat, chatManager.localeGR);
+                chatManager.chat = chatManager.buildChat(chatManager.chatbot, chatManager.getCurrentLocale());
+                chatManager.runChat(chatManager.chat);
                 if (chatManager.getLastBookmark() == null) {
                     //chatbot.async().goToBookmark(bookmarksEN.get("INTRO"), AutonomousReactionImportance.HIGH, AutonomousReactionValidity.IMMEDIATE);
                 }
@@ -301,6 +307,7 @@ public class MainActivity extends RobotActivity
     @Override
     public void onBookmarkReached(Bookmark bookmark) {
         Log.i(TAG, "[CHATBOT] Bookmark " + bookmark.getName() + " reached.");
+        chatManager.setLastBookmark(bookmark);
         switch (bookmark.getName()) {
             case "BAUXITE":
                 chatManager.setContent(chatFragment, new Pair<>(LayoutRobotImage, R.drawable.red_bauxite_pissoliths));
@@ -311,18 +318,40 @@ public class MainActivity extends RobotActivity
             case "BAUXITE.3":
                 chatManager.setContent(chatFragment, new Pair<>(LayoutRobotImage, R.drawable.aluminium));
                 break;
+            case "CORRECT":
+            case "FALSE":
+                //chatManager.runChat(chatManager.chat);
+                break;
             default:
                 break;
         }
         if (bookmark.getName().contains("QUESTION.")) {
-            String content = bookmark.getTopic().getContent();
-            String name = bookmark.getName();
-            String proposalContent = StringUtility.extractProposal(name, content);
-            runOnUiThread(() -> {
-                quizManager.setContent(quizFragment, name, proposalContent);
+            Future<Void> getTopicFuture = bookmark.async().getTopic().thenConsume(value -> {
+                if (value.hasError()) {
+                    Log.e(TAG, "[onBookmarkReached] getTopic: " + value.getErrorMessage());
+                } else {
+                    value.get().async().getContent().thenConsume(new Consumer<Future<String>>() {
+                        @Override
+                        public void consume(Future<String> value) throws Throwable {
+                            if (value.hasError()) {
+                                Log.e(TAG, "[onBookmarkReached] getContent: " + value.getErrorMessage());
+                            } else {
+                                String content = value.get();
+                                String name = bookmark.getName();
+                                String proposalContent = StringUtility.extractProposal(name, content);
+                                runOnUiThread(() -> {
+                                    quizManager.setContent(quizFragment, name, proposalContent);
+                                });
+                            }
+                        }
+                    });
+
+                }
             });
+
         }
-        chatManager.setLastBookmark(bookmark);
+
+
     }
 
     /**
@@ -339,7 +368,11 @@ public class MainActivity extends RobotActivity
         if (!sayingText.isEmpty()) {
             Log.i(TAG, "[SPEECH ENGINE]/[CHAT] Pepper Reply: " + sayingText);
             chatManager.setContent(chatFragment, new Pair<>(LayoutRobot, sayingText));
+        } else {
+
         }
+
+
     }
 
     /**
@@ -354,7 +387,6 @@ public class MainActivity extends RobotActivity
         if (!heardText.isEmpty()) {
             Log.i(TAG, "[CHAT] Heard phrase: " + heardPhrase.getText());
             chatManager.setContent(chatFragment, new Pair<>(LayoutUser, heardText));
-
         }
     }
 
@@ -368,24 +400,25 @@ public class MainActivity extends RobotActivity
      */
     @Override
     public void onAutonomousReactionChanged(AutonomousReaction autonomousReaction) {
+        //Log.d(TAG, "[onAutonomousReactionChanged]");
         timingManager.checkForDuplicates(autonomousReaction, autonomousReaction1 -> {
             ChatbotReaction chatbotReaction = autonomousReaction1.getChatbotReaction();
             if (chatbotReaction.getChatbotReactionHandlingStatus() == ChatbotReactionHandlingStatus.HANDLED) {
-                Log.d(TAG, "[autonomousReaction] [ALREADY HANDLED] ");
+                Log.e(TAG, "[autonomousReaction] [ALREADY HANDLED] ");
             } else if (chatbotReaction.getChatbotReactionHandlingStatus() == ChatbotReactionHandlingStatus.REJECTED) {
-                Log.d(TAG, "[autonomousReaction] [REJECTED] ");
+                Log.e(TAG, "[autonomousReaction] [REJECTED] ");
             } else {
                 if (!chatManager.speechEngine.getSaying().getText().isEmpty()) {
-                    Log.d(TAG, "[autonomousReaction] [NOT HANDLED] [speechEngine.getSaying]: " + chatManager.speechEngine.getSaying().getText());
+                    Log.e(TAG, "[autonomousReaction] [NOT HANDLED] [speechEngine.getSaying]: " + chatManager.speechEngine.getSaying().getText());
                 } else {
                     if (chatManager.chat == null) {
-                        Log.d(TAG, "[autonomousReaction] [NOT HANDLED]: chat is null");
+                        Log.i(TAG, "[autonomousReaction] [RUNNING NOW]: chat is null");
                         chatbotReaction.async().runWith(chatManager.speechEngine);
                     } else {
                         if (!chatManager.chat.getSaying().getText().isEmpty()) {
-                            Log.d(TAG, "[autonomousReaction] [NOT HANDLED] [chat.getSaying]: " + chatManager.chat.getSaying().getText());
+                            Log.e(TAG, "[autonomousReaction] [NOT HANDLED] [chat.getSaying]: " + chatManager.chat.getSaying().getText());
                         } else {
-                            Log.d(TAG, "[autonomousReaction] [RUNNING NOW] ");
+                            Log.i(TAG, "[autonomousReaction] [RUNNING NOW] ");
                             chatbotReaction.async().runWith(chatManager.speechEngine);
                             return;
                         }
