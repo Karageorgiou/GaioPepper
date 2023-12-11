@@ -34,6 +34,7 @@ import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.models.MessageItem;
 import gr.ntua.metal.gaiopepper.util.ImageManager;
 import gr.ntua.metal.gaiopepper.util.StringUtility;
+import gr.ntua.metal.gaiopepper.util.fsm.discussion.DiscussionState;
 
 public class ChatFragment extends Fragment implements View.OnClickListener {
     private static final String TAG = "Chat Fragment";
@@ -153,20 +154,15 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
 
     private void applyPreferences() {
         if (Objects.equals(conversationMode, getString(R.string.NONE_VALUE))) {
-            if (mainActivity.chatManager.chatFuture != null) {
-                if (!mainActivity.chatManager.chatFuture.isSuccess() || !mainActivity.chatManager.chatFuture.isCancelled() || !mainActivity.chatManager.chatFuture.isDone()) {
-                    mainActivity.chatManager.chatFuture.requestCancellation();
-                }
-            }
+            //mainActivity.discussionFSM.changeState(DiscussionState.none, null);
+            //mainActivity.chatManager.tryCancelChat();
             hideTextInput();
         } else if (Objects.equals(conversationMode, getString(R.string.ORAL_CONVERSATION_VALUE))) {
+            //mainActivity.discussionFSM.changeState(DiscussionState.oral, null);
             hideTextInput();
         } else if (Objects.equals(conversationMode, getString(R.string.WRITTEN_CONVERSATION_VALUE))) {
-            if (mainActivity.chatManager.chatFuture != null) {
-                if (!mainActivity.chatManager.chatFuture.isSuccess() || !mainActivity.chatManager.chatFuture.isCancelled() || !mainActivity.chatManager.chatFuture.isDone()) {
-                    mainActivity.chatManager.chatFuture.requestCancellation();
-                }
-            }
+            //mainActivity.discussionFSM.changeState(DiscussionState.written, null);
+            //mainActivity.chatManager.tryCancelChat();
             showTextInput();
         }
     }
@@ -237,11 +233,13 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
         inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
-    protected void hideTextInput() {
-        constraintLayoutBottom.setMaxHeight(0);
+    public void hideTextInput() {
+        if (constraintLayoutBottom != null) {
+            constraintLayoutBottom.setMaxHeight(0);
+        }
     }
 
-    protected void showTextInput() {
+    public void showTextInput() {
         ConstraintLayout.LayoutParams layoutParams = (ConstraintLayout.LayoutParams) constraintLayoutBottom.getLayoutParams();
         layoutParams.height = 150;
         constraintLayoutBottom.setLayoutParams(layoutParams);

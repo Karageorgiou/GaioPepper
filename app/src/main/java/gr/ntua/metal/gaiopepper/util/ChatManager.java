@@ -3,6 +3,7 @@ package gr.ntua.metal.gaiopepper.util;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.util.Pair;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
@@ -13,7 +14,6 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.builder.ChatBuilder;
 import com.aldebaran.qi.sdk.builder.QiChatbotBuilder;
 import com.aldebaran.qi.sdk.builder.TopicBuilder;
-import com.aldebaran.qi.sdk.object.conversation.AutonomousReaction;
 import com.aldebaran.qi.sdk.object.conversation.AutonomousReactionImportance;
 import com.aldebaran.qi.sdk.object.conversation.AutonomousReactionValidity;
 import com.aldebaran.qi.sdk.object.conversation.Bookmark;
@@ -40,6 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import gr.ntua.metal.gaiopepper.R;
 import gr.ntua.metal.gaiopepper.activities.main.ChatFragment;
 import gr.ntua.metal.gaiopepper.activities.main.MainActivity;
+import gr.ntua.metal.gaiopepper.util.fsm.chat.ChatState;
 
 public class ChatManager implements IManager{
     private static final String TAG = "Chat Manager";
@@ -200,7 +201,7 @@ public class ChatManager implements IManager{
             newChatbot.async().addOnBookmarkReachedListener(mainActivity);
             newChatbot.async().addOnEndedListener(endReason -> {
                 Log.i(TAG, "Chatbot ended for reason: " + endReason);
-                chatFuture.requestCancellation();
+                tryCancelChat();
             });
             newChatbot.async().addOnAutonomousReactionChangedListener(mainActivity);
             if (this.lastBookmark != null) {
@@ -235,9 +236,12 @@ public class ChatManager implements IManager{
             Log.i(TAG, "[CHAT] Chat started.");
         });
         chat.async().addOnListeningChangedListener(listening -> {
+            //Log.i(TAG, "OnListeningChanged: ");
             if (listening) {
+                mainActivity.chatFSM.changeState(ChatState.listening, null);
                 Log.i(TAG, "[CHAT] Listening START.");
             } else {
+                mainActivity.chatFSM.changeState(ChatState.alive, null);
                 Log.i(TAG, "[CHAT] Listening END.");
             }
 
@@ -295,12 +299,7 @@ public class ChatManager implements IManager{
                 Log.e(TAG, "Reply Reaction Future [ERROR]: " + replyReactionFuture.getErrorMessage());
                 error.set(true);
             } else {
-                if (chatFuture != null) {
-                    chatFuture.requestCancellation();
-                    while (true) {
-                        if (chatFuture == null) break;
-                    }
-                }
+                tryCancelChat();
                 ReplyReaction replyReaction = replyReactionFuture.get();
                 Future<ChatbotReaction> getChatbotReactionFuture = replyReaction.async().getChatbotReaction();
                 getChatbotReactionFuture.thenConsume(chatbotReactionFuture -> {
@@ -332,6 +331,18 @@ public class ChatManager implements IManager{
             }
         });
         return error.get();
+    }
+
+    public void tryCancelChat() {
+        if (chatFuture != null) {
+            Log.i(TAG, "Canceling chat...");
+            chatFuture.requestCancellation();
+            while (true) {
+                if (chatFuture == null) break;
+            }
+        } else {
+            Log.i(TAG, "Chat is already canceled");
+        }
     }
 
     public void replyTo(String message, Locale locale) {
@@ -386,6 +397,15 @@ public class ChatManager implements IManager{
 
     public Locale getCurrentLocale() {
         return currentLocale;
+    }
+
+    public void hideTextInput() {
+        mainActivity.chatFragment.hideTextInput();
+    }
+
+    public void showTextInput() {
+        mainActivity.chatFragment.showTextInput();
+
     }
 
 
